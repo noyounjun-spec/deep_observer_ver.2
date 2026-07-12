@@ -3,100 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>심해의 기록자 : 아치의 탐험</title>
-    <!-- QR 스캔을 위한 외부 라이브러리 불러오기 -->
+    <title>해양경찰 심해의 기록자</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f8ff; margin: 0; padding: 20px; text-align: center; }
-        h1 { color: #0056b3; }
-        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-        .logbook { margin-top: 20px; text-align: left; padding: 15px; background: #e6f2ff; border-radius: 10px; }
-        .badge { display: inline-block; padding: 10px; margin: 5px; background: #ccc; color: white; border-radius: 5px; font-weight: bold; }
-        .badge.active { background: #00bfff; }
-        /* 팝업 모달 스타일 */
-        #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; z-index: 1000; }
-        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #004080; padding: 30px; border-radius: 15px; width: 80%; }
-        button { background: #00bfff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 15px;}
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f8ff; margin: 0; padding: 10px; text-align: center; }
+        h2 { color: #003366; margin-bottom: 5px; }
+        .desc { font-size: 14px; color: #555; margin-bottom: 20px; }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        /* 캐릭터 도감 UI */
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+        .character-card { width: 100px; height: 130px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px; }
+        .character-img { width: 80px; height: 80px; object-fit: contain; filter: grayscale(100%); opacity: 0.3; transition: 0.5s; }
+        .character-img.active { filter: grayscale(0%); opacity: 1; }
+        .char-name { font-size: 12px; font-weight: bold; margin-top: 5px; color: #333; text-align: center; word-break: keep-all; }
+
+        /* 스토리 팝업(모달) UI */
+        #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; z-index: 1000; }
+        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: #333; padding: 20px; border-radius: 15px; width: 80%; max-width: 350px; text-align: center; }
+        .modal-img { width: 150px; height: 150px; object-fit: contain; margin-bottom: 15px; }
+        .modal-title { font-size: 20px; font-weight: bold; color: #0056b3; margin-bottom: 10px; }
+        .modal-text { font-size: 14px; line-height: 1.5; margin-bottom: 20px; text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px;}
+        button { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        
+        /* 최종 완료 배너 */
+        #completionBanner { display: none; background: #ff9900; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; font-weight: bold; animation: pop 0.5s ease-in-out; }
+        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
+        
+        /* 리셋 버튼 */
+        .reset-btn { margin-top: 30px; background: #ccc; color: #333; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🌊 심해의 기록자</h1>
-    <p>아치와 함께 보이지 않는 해경의 발자취를 찾으세요!</p>
+    <h2>🌊 심해의 기록자</h2>
+    <p class="desc">현장의 QR을 스캔하여 숨겨진 해경의 활약상을 확인하고<br>6개의 아치를 모두 모아 키링을 받으세요!</p>
 
-    <!-- QR 카메라 영역 -->
+    <!-- 카메라 스캐너 영역 -->
     <div id="reader"></div>
 
-    <!-- 탐사 일지 (로그북) -->
-    <div class="logbook">
-        <h3>📖 아치의 탐사 일지</h3>
-        <p>수집한 해경 스킨 및 뱃지</p>
-        <div id="badge-incheon" class="badge">인천: 잠금됨</div>
-        <div id="badge-jeju" class="badge">제주: 잠금됨</div>
+    <!-- 최종 키링 교환 배너 -->
+    <div id="completionBanner">
+        🎉 축하합니다! 모든 구역의 아치를 모았습니다!<br><br>
+        이 화면을 본청 안내데스크에 보여주고<br>한정판 아치 키링 세트로 교환하세요!
     </div>
-</div>
 
-<!-- 스토리 해금 모달 팝업 -->
-<div id="storyModal">
-    <div class="modal-content">
-        <h2 id="modalTitle">지역 발견!</h2>
-        <p id="modalText">스토리 텍스트</p>
-        <p><strong>획득 보상:</strong> <span id="modalReward">보상</span></p>
-        <button onclick="closeModal()">확인 및 기록하기</button>
+    <!-- 캐릭터 수집 도감 -->
+    <div class="gallery" id="galleryContainer">
+        <!-- 자바스크립트로 자동 생성됩니다 -->
     </div>
-</div>
+    
+    <!-- 테스트용 초기화 버튼 -->
+    <button class="reset-btn" onclick="resetData()">데이터 초기화 (테스트용)</button>
+
+    <!-- 스토리 확인 팝업 -->
+    <div id="storyModal">
+        <div class="modal-content">
+            <img id="modalImg" class="modal-img" src="" alt="캐릭터">
+            <div class="modal-title" id="modalTitle">지역 발견!</div>
+            <div class="modal-text" id="modalText">스토리 내용</div>
+            <button onclick="closeModal()">아치 획득하기!</button>
+        </div>
+    </div>
 
 <script>
-    // 1. QR 스캐너 초기화
-    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, /* verbose= */ false);
-    
-    // 이미 발견한 지역을 저장하는 배열
-    let unlockedRegions = [];
+    // 1. 스토리 및 캐릭터 데이터베이스 (업로드한 파일명과 완벽히 일치시킴)
+    const db = {
+        "QR_JUNGBU": { id: "jungbu", name: "중부 방제 아치", img: "중부 아치.png", title: "수도권 해양 오염 방제", story: "해양 오염 사고 발생! 바다에 유출된 기름과 쓰레기를 신속히 걷어내어 수도권 바다를 깨끗하게 지켜냈습니다." },
+        "QR_SEOHAE": { id: "seohae", name: "서해 수호 아치", img: "서해 아치.png", title: "불법 조업 어선 단속", story: "불법 조업 외국 어선 단속 완료! 우리 어민들의 소중한 자산인 꽃게와 조기 등 어족 자원을 안전하게 보호했습니다." },
+        "QR_NAMHAE": { id: "namhae", name: "남해 구조 아치", img: "남해 아치.png", title: "해상 조난 선박 구조", story: "복잡한 해상 교통망에서 발생한 선박 조난 사고! 신속한 출동과 구조망 투척으로 소중한 생명을 구했습니다." },
+        "QR_DONGHAE":{ id: "donghae", name: "동해 안전 아치", img: "동해 아치.png", title: "해양 레저 안전 확보", story: "거친 파도 속 표류하던 서퍼 구출! 든든한 해상 순찰로 동해안의 해양 레저 안전을 굳건히 책임집니다." },
+        "QR_JEJU":   { id: "jeju", name: "제주 생태 아치", img: "제주 아치.png", title: "해양 생태계 보호", story: "폐그물에 걸린 남방큰돌돌고래 발견! 심해 잠수 구조로 제주의 아름다운 해양 생태계를 지켰습니다." },
+        "QR_MAIN":   { id: "main", name: "본청 안전 아치", img: "아치.png", title: "해양 안전 캠페인", story: "구명조끼 입기 실천! 해양경찰과 함께하는 안전한 바다 만들기 캠페인에 동참해 주셔서 감사합니다." }
+    };
 
-    // 2. QR 스캔 성공 시 실행되는 함수
-    function onScanSuccess(decodedText, decodedResult) {
-        // 예: QR 코드에 "INCHEON_01" 이라는 텍스트가 심어져 있다고 가정
-        if (decodedText === "INCHEON_01" && !unlockedRegions.includes("인천")) {
-            html5QrcodeScanner.pause(); // 카메라 일시정지
-            showStory("인천 해역 방제 구역", 
-                      "이곳은 3일 전 기름 유출 사고가 있었지만, 해양경찰의 신속한 방제로 지금은 해양 생물들이 다시 돌아왔습니다. 아치가 깨끗해진 바다를 기록합니다!", 
-                      "해경 방제복 스킨 뱃지", 
-                      "인천");
-        }
-    }
+    // 2. 내 폰에 저장된 수집 기록 불러오기 (새로고침해도 유지됨)
+    let collectedLogs = JSON.parse(localStorage.getItem('archieLogs_v2')) || [];
+    let currentScannedId = "";
 
-    // 스캔 실패 시 (지속적으로 백그라운드 실행되므로 로그 생략)
-    function onScanFailure(error) { }
-
-    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-
-    // 3. 스토리 팝업 띄우기
-    function showStory(title, text, reward, region) {
-        document.getElementById("modalTitle").innerText = title;
-        document.getElementById("modalText").innerText = text;
-        document.getElementById("modalReward").innerText = reward;
-        document.getElementById("storyModal").style.display = "block";
+    // 3. 도감 화면 그리기
+    function renderGallery() {
+        const container = document.getElementById("galleryContainer");
+        container.innerHTML = "";
         
-        unlockedRegions.push(region);
-    }
+        let collectedCount = 0;
 
-    // 4. 팝업 닫기 및 도감 업데이트
-    function closeModal() {
-        document.getElementById("storyModal").style.display = "none";
-        html5QrcodeScanner.resume(); // 카메라 다시 시작
-        updateLogbook();
-    }
+        for (const key in db) {
+            const data = db[key];
+            const isCollected = collectedLogs.includes(key);
+            if(isCollected) collectedCount++;
 
-    // 5. 도감 UI 업데이트
-    function updateLogbook() {
-        if (unlockedRegions.includes("인천")) {
-            const incheonBadge = document.getElementById("badge-incheon");
-            incheonBadge.classList.add("active");
-            incheonBadge.innerText = "인천: 방제복 획득 완료 🎖️";
+            container.innerHTML += `
+                <div class="character-card">
+                    <img src="${data.img}" class="character-img ${isCollected ? 'active' : ''}" alt="${data.name}" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
+                    <div class="char-name">${isCollected ? data.name : '???'}</div>
+                </div>
+            `;
+        }
+
+        // 6개 다 모으면 배너 표시
+        if(collectedCount === Object.keys(db).length) {
+            document.getElementById("completionBanner").style.display = "block";
+        } else {
+            document.getElementById("completionBanner").style.display = "none";
         }
     }
+
+    // 4. QR 스캔 성공 시 실행 (GPS 로직은 제외하고 QR 내용만 확인)
+    function onScanSuccess(decodedText, decodedResult) {
+        if (db[decodedText]) {
+            // 이미 수집한 곳이면 무시
+            if(collectedLogs.includes(decodedText)) {
+                alert("이미 수집한 아치입니다! 다른 지역을 탐험해 보세요.");
+                return;
+            }
+            
+            // 모달 띄우기
+            currentScannedId = decodedText;
+            const data = db[decodedText];
+            document.getElementById("modalImg").src = data.img;
+            document.getElementById("modalTitle").innerText = data.title;
+            document.getElementById("modalText").innerText = data.story;
+            document.getElementById("storyModal").style.display = "block";
+            
+            // 스캐너 잠시 멈춤
+            html5QrcodeScanner.pause();
+        } else {
+            // 시스템 QR이 아닌 일반 QR을 찍었을 때 무시하거나 경고
+            alert("유효하지 않은 해양경찰 QR코드입니다.");
+        }
+    }
+
+    // 5. 팝업 닫고 보상 획득 처리
+    function closeModal() {
+        collectedLogs.push(currentScannedId);
+        localStorage.setItem('archieLogs_v2', JSON.stringify(collectedLogs)); // 스마트폰에 저장
+        
+        document.getElementById("storyModal").style.display = "none";
+        renderGallery();
+        html5QrcodeScanner.resume(); // 스캐너 재시작
+    }
+
+    // 6. 데모 테스트용 초기화 함수
+    function resetData() {
+        if(confirm("모든 수집 데이터를 초기화하시겠습니까?")) {
+            localStorage.removeItem('archieLogs_v2');
+            collectedLogs = [];
+            renderGallery();
+        }
+    }
+
+    // 초기 실행
+    renderGallery();
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+    html5QrcodeScanner.render(onScanSuccess, (error) => {});
 </script>
 
 </body>
