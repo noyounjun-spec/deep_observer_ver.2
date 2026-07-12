@@ -158,6 +158,35 @@
     const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
     html5QrcodeScanner.render(onScanSuccess, (error) => {});
 </script>
+<hr style="margin-top: 50px; border: 1px solid #ccc;">
+<h3 style="color: #333;">📢 [테스트용 진짜 QR 코드 모음]</h3>
+<p style="font-size: 13px; color: #666;">아래 QR 코드를 스마트폰 카메라로 스캔하면 각 아치가 정상적으로 수집됩니다.</p>
 
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; background: #fff; border-radius: 10px; max-width: 500px; margin: 0 auto 50px;">
+    <div style="text-align:center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_JUNGBU" alt="중부">
+        <div style="font-size:12px; font-weight:bold; margin-top:5px;">중부 방제 아치</div>
+    </div>
+    <div style="text-align:center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_SEOHAE" alt="서해">
+        <div style="font-size:12px; font-weight:bold; margin-top:5px;">서해 수호 아치</div>
+    </div>
+    <div style="text-align:center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_NAMHAE" alt="남해">
+        <div style="font-size:12px; font-weight:bold; margin-top:5px;">남해 구조 아치</div>
+    </div>
+    <div style="text-align:center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_DONGHAE" alt="동해">
+        <div style="font-size:12px; font-weight:bold; margin-top:5px;">동해 안전 아치</div>
+    </div>
+    <div style="text-align:center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_JEJU" alt="제주">
+        <div style="font-size:12px; font-weight:bold; margin-top:5px;">제주 생태 아치</div>
+    </div>
+    <div style="text-align:center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_MAIN" alt="본청">
+        <div style="font-size:12px; font-weight:bold; margin-top:5px;">본청 안전 아치</div>
+    </div>
+</div>
 </body>
 </html>
