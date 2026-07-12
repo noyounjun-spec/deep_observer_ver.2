@@ -13,7 +13,8 @@
         /* 로그인 / 회원가입 화면 UI */
         .auth-container { max-width: 300px; margin: 50px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .auth-input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .auth-btn { background: #003366; color: white; border: none; padding: 12px; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .auth-btn { background: #003366; color: white; border: none; padding: 12px; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .auth-btn:hover { background: #002244; }
         .auth-link { font-size: 12px; color: #0056b3; cursor: pointer; margin-top: 15px; display: inline-block; text-decoration: underline; }
         
         /* 메인 앱 UI */
@@ -22,16 +23,18 @@
         .logout-btn { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
         
         /* 스캐너 UI */
-        #startScannerBtn { background: #ff9900; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #startScannerBtn { background: #ff9900; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; }
+        #startScannerBtn:active { transform: scale(0.98); }
         #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; display: none; }
         
-        /* 갤러리 및 모달 UI */
+        /* 갤러리 도감 UI */
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
         .character-card { width: 100px; height: 130px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px; }
         .character-img { width: 80px; height: 80px; object-fit: contain; filter: grayscale(100%); opacity: 0.3; transition: 0.5s; }
         .character-img.active { filter: grayscale(0%); opacity: 1; }
         .char-name { font-size: 12px; font-weight: bold; margin-top: 5px; text-align: center; word-break: keep-all; }
         
+        /* 팝업 모달 UI */
         #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; z-index: 1000; overflow-y: auto; }
         .modal-content { position: relative; margin: 10% auto; background: white; color: #333; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .modal-title { font-size: 22px; font-weight: bold; color: #0056b3; margin-bottom: 15px; }
@@ -43,7 +46,7 @@
         @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
         #completionBanner { display: none; background: #ff9900; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; font-weight: bold; }
         
-        /* 데모용 QR 섹션 (로그인 후에만 보임) */
+        /* 데모용 테스트 QR 섹션 (로그인 후에만 보임) */
         .demo-qr-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed #bbb; display: none; }
         .qr-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 15px; }
         .qr-item { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -51,16 +54,14 @@
 </head>
 <body>
 
-    <!-- 1. 인증 화면 (로그인 / 회원가입 / 비번찾기) -->
     <div id="authWrap">
         <h2>🌊 심해의 기록자</h2>
         <p class="desc">해양경찰과 함께하는 환경 수호 프로젝트</p>
         
-        <!-- 로그인 창 -->
         <div id="loginBox" class="auth-container">
             <h3>로그인</h3>
-            <input type="text" id="loginId" class="auth-input" placeholder="아이디">
-            <input type="password" id="loginPw" class="auth-input" placeholder="비밀번호">
+            <input type="text" id="loginId" class="auth-input" placeholder="아이디 입력">
+            <input type="password" id="loginPw" class="auth-input" placeholder="비밀번호 입력">
             <button class="auth-btn" onclick="login()">로그인</button>
             <div style="display: flex; justify-content: space-between;">
                 <span class="auth-link" onclick="showAuthBox('signupBox')">회원가입</span>
@@ -68,33 +69,29 @@
             </div>
         </div>
 
-        <!-- 회원가입 창 -->
         <div id="signupBox" class="auth-container" style="display: none;">
             <h3>회원가입</h3>
-            <input type="text" id="signupId" class="auth-input" placeholder="아이디 (영문/숫자)">
-            <input type="password" id="signupPw" class="auth-input" placeholder="비밀번호">
+            <input type="text" id="signupId" class="auth-input" placeholder="새 아이디 (영문/숫자)">
+            <input type="password" id="signupPw" class="auth-input" placeholder="새 비밀번호">
             <button class="auth-btn" onclick="signup()">가입하기</button>
-            <span class="auth-link" onclick="showAuthBox('loginBox')">로그인으로 돌아가기</span>
+            <span class="auth-link" onclick="showAuthBox('loginBox')">로그인 화면으로 돌아가기</span>
         </div>
 
-        <!-- 비밀번호 재설정 창 -->
         <div id="resetBox" class="auth-container" style="display: none;">
             <h3>비밀번호 재설정</h3>
             <input type="text" id="resetId" class="auth-input" placeholder="가입한 아이디">
             <input type="password" id="resetPw" class="auth-input" placeholder="새로운 비밀번호">
             <button class="auth-btn" onclick="resetPassword()">비밀번호 변경</button>
-            <span class="auth-link" onclick="showAuthBox('loginBox')">로그인으로 돌아가기</span>
+            <span class="auth-link" onclick="showAuthBox('loginBox')">로그인 화면으로 돌아가기</span>
         </div>
     </div>
 
-    <!-- 2. 메인 앱 화면 (로그인 성공 시 표시) -->
     <div id="appContainer">
         <div class="header-bar">
             <span id="welcomeMsg">사용자님 환영합니다!</span>
             <button class="logout-btn" onclick="logout()">로그아웃</button>
         </div>
 
-        <!-- 스캐너 버튼 및 영역 -->
         <button id="startScannerBtn" onclick="startScanner()">📷 QR 스캐너 켜기</button>
         <div id="reader"></div>
 
@@ -105,54 +102,55 @@
 
         <div class="gallery" id="galleryContainer"></div>
 
-        <!-- 데모용 하단 QR -->
         <div class="demo-qr-section" id="demoQrArea">
             <h3 style="color:#d9534f;">🖥️ 데모 테스트용 QR 코드</h3>
+            <p style="font-size:12px; color:#555;">스캐너를 켜고 아래 QR을 비춰보세요.</p>
             <div class="qr-grid">
-                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_JUNGBU"><br><small>중부</small></div>
-                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_SEOHAE"><br><small>서해</small></div>
-                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_NAMHAE"><br><small>남해</small></div>
-                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_DONGHAE"><br><small>동해</small></div>
-                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_JEJU"><br><small>제주</small></div>
-                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_MAIN"><br><small>본청</small></div>
+                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_JUNGBU" alt="QR"><br><small>중부 방제</small></div>
+                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_SEOHAE" alt="QR"><br><small>서해 수호</small></div>
+                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_NAMHAE" alt="QR"><br><small>남해 구조</small></div>
+                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_DONGHAE" alt="QR"><br><small>동해 안전</small></div>
+                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_JEJU" alt="QR"><br><small>제주 생태</small></div>
+                <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=QR_MAIN" alt="QR"><br><small>본청 안전</small></div>
             </div>
         </div>
     </div>
 
-    <!-- 3. 스토리 및 보상 팝업 -->
     <div id="storyModal">
         <div class="modal-content">
+            
             <div id="step1">
                 <div class="modal-title" id="modalTitle">지역 발견!</div>
                 <div class="video-wrapper">
-                    <!-- 처음엔 비워두고 QR 찍을 때만 로딩하여 속도 대폭 개선 -->
                     <iframe id="modalVideo" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                 </div>
                 <div class="modal-text" id="modalText">스토리 내용</div>
                 <button class="action-btn" onclick="showReward()">보상 획득하기!</button>
             </div>
+            
             <div id="step2" style="display: none;">
                 <div class="modal-title" style="color: #ff9900;">🎉 캐릭터 획득!</div>
                 <img id="rewardImg" class="reward-img" src="" alt="보상 캐릭터">
                 <div class="modal-text" style="text-align: center; font-weight: bold; font-size: 18px;" id="rewardName">아치 이름</div>
                 <button class="action-btn" onclick="closeModal()">도감에 추가하기</button>
             </div>
+            
         </div>
     </div>
 
 <script>
-    // --- [1] 데이터베이스 ---
+    // --- [1] 데이터베이스 (한글 파일명 완벽 매칭) ---
     const db = {
-        "QR_JUNGBU": { id: "jungbu", name: "중부 방제 아치", img: "jungbu.png", title: "수도권 해양 오염 방제", story: "필리핀 기름 유출 현장까지 파견된 해경! 세계의 바다를 지키는 해양경찰의 땀방울을 확인하세요.", videoId: "jRX3fezEFIE" },
-        "QR_SEOHAE": { id: "seohae", name: "서해 수호 아치", img: "seohae.png", title: "불법 조업 어선 단속", story: "거친 파도를 뚫고 불법 조업 어선을 단속하는 실제 바디캠 영상입니다. 어민들의 소중한 생업을 지킵니다.", videoId: "p0N1MhwUgmo" },
-        "QR_NAMHAE": { id: "namhae", name: "남해 구조 아치", img: "namhae.png", title: "해상 조난 선박 구조", story: "부상을 딛고 다시 바다로 돌아간 김진영 대원! 국민의 생명을 구하기 위한 헌신과 열정을 만나보세요.", videoId: "gE7VunbFeHw" },
-        "QR_DONGHAE":{ id: "donghae", name: "동해 안전 아치", img: "donghae.png", title: "해양 레저 안전 확보", story: "일촉즉발의 상황! 거친 파도 속 표류자를 구출하는 현장 바디캠입니다. 든든한 해상 순찰로 안전을 책임집니다.", videoId: "OEUUeHKepco" },
-        "QR_JEJU":   { id: "jeju", name: "제주 생태 아치", img: "jeju.png", title: "해양 생태계 보호", story: "제주의 아름다운 바다와 생태계를 지키는 해양경찰의 또 다른 활약상! 생명 존중의 가치를 실천합니다.", videoId: "7CwtSgJvFdM" },
-        "QR_MAIN":   { id: "main", name: "본청 안전 아치", img: "main.png", title: "해양 안전 캠페인", story: "바다의 안전은 구명조끼부터! 해양경찰과 함께하는 안전한 바다 만들기 캠페인에 동참해 주셔서 감사합니다.", videoId: "9XLddsY_KQI" }
+        "QR_JUNGBU": { id: "jungbu", name: "중부 방제 아치", img: "중부 아치.png", title: "수도권 해양 오염 방제", story: "필리핀 기름 유출 현장까지 파견된 해경! 세계의 바다를 지키는 해양경찰의 땀방울을 확인하세요.", videoId: "jRX3fezEFIE" },
+        "QR_SEOHAE": { id: "seohae", name: "서해 수호 아치", img: "서해 아치.png", title: "불법 조업 어선 단속", story: "거친 파도를 뚫고 불법 조업 어선을 단속하는 실제 바디캠 영상입니다. 어민들의 소중한 생업을 지킵니다.", videoId: "p0N1MhwUgmo" },
+        "QR_NAMHAE": { id: "namhae", name: "남해 구조 아치", img: "남해 아치.png", title: "해상 조난 선박 구조", story: "부상을 딛고 다시 바다로 돌아간 김진영 대원! 국민의 생명을 구하기 위한 헌신과 열정을 만나보세요.", videoId: "gE7VunbFeHw" },
+        "QR_DONGHAE":{ id: "donghae", name: "동해 안전 아치", img: "동해 아치.png", title: "해양 레저 안전 확보", story: "일촉즉발의 상황! 거친 파도 속 표류자를 구출하는 현장 바디캠입니다. 든든한 해상 순찰로 안전을 책임집니다.", videoId: "OEUUeHKepco" },
+        "QR_JEJU":   { id: "jeju", name: "제주 생태 아치", img: "제주 아치.png", title: "해양 생태계 보호", story: "제주의 아름다운 바다와 생태계를 지키는 해양경찰의 또 다른 활약상! 생명 존중의 가치를 실천합니다.", videoId: "7CwtSgJvFdM" },
+        "QR_MAIN":   { id: "main", name: "본청 안전 아치", img: "아치.png", title: "해양 안전 캠페인", story: "바다의 안전은 구명조끼부터! 해양경찰과 함께하는 안전한 바다 만들기 캠페인에 동참해 주셔서 감사합니다.", videoId: "9XLddsY_KQI" }
     };
 
     // --- [2] 유저 인증 (회원가입/로그인) 로직 ---
-    let usersDB = JSON.parse(localStorage.getItem('usersDB')) || {};
+    let usersDB = JSON.parse(localStorage.getItem('archieUsersDB')) || {};
     let currentUser = null;
 
     function showAuthBox(boxId) {
@@ -168,9 +166,8 @@
         if(!id || !pw) return alert("아이디와 비밀번호를 입력해주세요.");
         if(usersDB[id]) return alert("이미 존재하는 아이디입니다.");
         
-        // 새 유저 생성 (빈 도감 배열 부여)
         usersDB[id] = { password: pw, logs: [] };
-        localStorage.setItem('usersDB', JSON.stringify(usersDB));
+        localStorage.setItem('archieUsersDB', JSON.stringify(usersDB));
         alert("회원가입이 완료되었습니다! 로그인해주세요.");
         showAuthBox('loginBox');
     }
@@ -183,7 +180,7 @@
             document.getElementById('authWrap').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('welcomeMsg').innerText = `${id} 님의 도감`;
-            document.getElementById('demoQrArea').style.display = 'block'; // 데모 QR 보이기
+            document.getElementById('demoQrArea').style.display = 'block';
             renderGallery();
         } else {
             alert("아이디 또는 비밀번호가 틀렸습니다.");
@@ -196,7 +193,7 @@
         if(!usersDB[id]) return alert("존재하지 않는 아이디입니다.");
         
         usersDB[id].password = pw;
-        localStorage.setItem('usersDB', JSON.stringify(usersDB));
+        localStorage.setItem('archieUsersDB', JSON.stringify(usersDB));
         alert("비밀번호가 성공적으로 변경되었습니다.");
         showAuthBox('loginBox');
     }
@@ -210,12 +207,11 @@
         document.getElementById('authWrap').style.display = 'block';
         document.getElementById('demoQrArea').style.display = 'none';
         
-        // 입력창 비우기
         document.getElementById('loginId').value = '';
         document.getElementById('loginPw').value = '';
     }
 
-    // --- [3] 메인 앱 로직 ---
+    // --- [3] 메인 앱 및 QR 스캐너 로직 ---
     let html5QrcodeScanner = null;
 
     function startScanner() {
@@ -245,19 +241,22 @@
             `;
         }
 
+        // 6개 모두 모으면 배너 띄우기
         document.getElementById("completionBanner").style.display = (collectedCount === Object.keys(db).length) ? "block" : "none";
     }
 
+    // QR 스캔 성공 시 동작
     function onScanSuccess(decodedText) {
         if (db[decodedText]) {
             const userLogs = usersDB[currentUser].logs;
             if(userLogs.includes(decodedText)) {
-                alert("이미 수집한 아치입니다!");
+                alert("이미 수집한 아치입니다! 다른 지역을 탐험해 보세요.");
                 return;
             }
             
-            // 모달 열기 전에 유튜브 영상 주소 삽입 (속도 최적화 핵심)
             const data = db[decodedText];
+            
+            // 데이터 세팅 (영상 + 캐릭터 보상)
             document.getElementById("modalTitle").innerText = data.title;
             document.getElementById("modalText").innerText = data.story;
             document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + data.videoId + "?autoplay=1";
@@ -267,23 +266,26 @@
             document.getElementById("step1").style.display = "block";
             document.getElementById("step2").style.display = "none";
             document.getElementById("storyModal").style.display = "block";
+            
             html5QrcodeScanner.pause();
             
-            // 임시 저장
+            // 저장용 임시 데이터 삽입
             document.getElementById("storyModal").dataset.scannedId = decodedText;
         }
     }
 
+    // 영상 시청 후 보상 획득 화면으로 전환
     function showReward() {
         document.getElementById("modalVideo").src = ""; // 영상 소리 끄기
         document.getElementById("step1").style.display = "none";
         document.getElementById("step2").style.display = "block";
     }
 
+    // 보상 확인 후 도감 갱신 및 창 닫기
     function closeModal() {
         const scannedId = document.getElementById("storyModal").dataset.scannedId;
         usersDB[currentUser].logs.push(scannedId);
-        localStorage.setItem('usersDB', JSON.stringify(usersDB)); // DB 갱신
+        localStorage.setItem('archieUsersDB', JSON.stringify(usersDB)); // 개별 유저 DB 업데이트
         
         document.getElementById("storyModal").style.display = "none";
         renderGallery();
