@@ -3,35 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>해양경찰 심해의 기록자</title>
+    <title>해양경찰 심해의 기록자 (데모용)</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f8ff; margin: 0; padding: 10px; text-align: center; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f8ff; margin: 0; padding: 10px; text-align: center; padding-bottom: 50px; }
         h2 { color: #003366; margin-bottom: 5px; }
         .desc { font-size: 14px; color: #555; margin-bottom: 20px; }
         #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        
-        /* 캐릭터 도감 UI */
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
         .character-card { width: 100px; height: 130px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px; }
         .character-img { width: 80px; height: 80px; object-fit: contain; filter: grayscale(100%); opacity: 0.3; transition: 0.5s; }
         .character-img.active { filter: grayscale(0%); opacity: 1; }
         .char-name { font-size: 12px; font-weight: bold; margin-top: 5px; color: #333; text-align: center; word-break: keep-all; }
-
-        /* 스토리 팝업(모달) UI */
         #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; z-index: 1000; }
         .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: #333; padding: 20px; border-radius: 15px; width: 80%; max-width: 350px; text-align: center; }
         .modal-img { width: 150px; height: 150px; object-fit: contain; margin-bottom: 15px; }
         .modal-title { font-size: 20px; font-weight: bold; color: #0056b3; margin-bottom: 10px; }
         .modal-text { font-size: 14px; line-height: 1.5; margin-bottom: 20px; text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px;}
         button { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
-        
-        /* 최종 완료 배너 */
         #completionBanner { display: none; background: #ff9900; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; font-weight: bold; animation: pop 0.5s ease-in-out; }
         @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
-        
-        /* 리셋 버튼 */
         .reset-btn { margin-top: 30px; background: #ccc; color: #333; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .demo-qr-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed #bbb; }
+        .qr-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 15px; }
+        .qr-item { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -39,24 +34,29 @@
     <h2>🌊 심해의 기록자</h2>
     <p class="desc">현장의 QR을 스캔하여 숨겨진 해경의 활약상을 확인하고<br>6개의 아치를 모두 모아 키링을 받으세요!</p>
 
-    <!-- 카메라 스캐너 영역 -->
     <div id="reader"></div>
 
-    <!-- 최종 키링 교환 배너 -->
     <div id="completionBanner">
         🎉 축하합니다! 모든 구역의 아치를 모았습니다!<br><br>
         이 화면을 본청 안내데스크에 보여주고<br>한정판 아치 키링 세트로 교환하세요!
     </div>
 
-    <!-- 캐릭터 수집 도감 -->
-    <div class="gallery" id="galleryContainer">
-        <!-- 자바스크립트로 자동 생성됩니다 -->
-    </div>
-    
-    <!-- 테스트용 초기화 버튼 -->
+    <div class="gallery" id="galleryContainer"></div>
     <button class="reset-btn" onclick="resetData()">데이터 초기화 (테스트용)</button>
 
-    <!-- 스토리 확인 팝업 -->
+    <div class="demo-qr-section">
+        <h3 style="color:#d9534f;">🖥️ 데모 테스트용 QR 코드</h3>
+        <p style="font-size:12px; color:#555;">모니터에 이 화면을 띄워두고 스마트폰으로 스캔해 보세요.</p>
+        <div class="qr-grid">
+            <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_JUNGBU"><br><small>중부 방제</small></div>
+            <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_SEOHAE"><br><small>서해 수호</small></div>
+            <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_NAMHAE"><br><small>남해 구조</small></div>
+            <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_DONGHAE"><br><small>동해 안전</small></div>
+            <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_JEJU"><br><small>제주 생태</small></div>
+            <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_MAIN"><br><small>본청 안전</small></div>
+        </div>
+    </div>
+
     <div id="storyModal">
         <div class="modal-content">
             <img id="modalImg" class="modal-img" src="" alt="캐릭터">
@@ -67,7 +67,6 @@
     </div>
 
 <script>
-    // 1. 스토리 및 캐릭터 데이터베이스 (업로드한 파일명과 완벽히 일치시킴)
     const db = {
         "QR_JUNGBU": { id: "jungbu", name: "중부 방제 아치", img: "중부 아치.png", title: "수도권 해양 오염 방제", story: "해양 오염 사고 발생! 바다에 유출된 기름과 쓰레기를 신속히 걷어내어 수도권 바다를 깨끗하게 지켜냈습니다." },
         "QR_SEOHAE": { id: "seohae", name: "서해 수호 아치", img: "서해 아치.png", title: "불법 조업 어선 단속", story: "불법 조업 외국 어선 단속 완료! 우리 어민들의 소중한 자산인 꽃게와 조기 등 어족 자원을 안전하게 보호했습니다." },
@@ -77,31 +76,26 @@
         "QR_MAIN":   { id: "main", name: "본청 안전 아치", img: "아치.png", title: "해양 안전 캠페인", story: "구명조끼 입기 실천! 해양경찰과 함께하는 안전한 바다 만들기 캠페인에 동참해 주셔서 감사합니다." }
     };
 
-    // 2. 내 폰에 저장된 수집 기록 불러오기 (새로고침해도 유지됨)
     let collectedLogs = JSON.parse(localStorage.getItem('archieLogs_v2')) || [];
     let currentScannedId = "";
 
-    // 3. 도감 화면 그리기
     function renderGallery() {
         const container = document.getElementById("galleryContainer");
         container.innerHTML = "";
-        
         let collectedCount = 0;
 
         for (const key in db) {
             const data = db[key];
             const isCollected = collectedLogs.includes(key);
             if(isCollected) collectedCount++;
-
             container.innerHTML += `
                 <div class="character-card">
-                    <img src="${data.img}" class="character-img ${isCollected ? 'active' : ''}" alt="${data.name}" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
+                    <img src="${data.img}" class="character-img ${isCollected ? 'active' : ''}" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
                     <div class="char-name">${isCollected ? data.name : '???'}</div>
                 </div>
             `;
         }
 
-        // 6개 다 모으면 배너 표시
         if(collectedCount === Object.keys(db).length) {
             document.getElementById("completionBanner").style.display = "block";
         } else {
@@ -109,42 +103,30 @@
         }
     }
 
-    // 4. QR 스캔 성공 시 실행 (GPS 로직은 제외하고 QR 내용만 확인)
-    function onScanSuccess(decodedText, decodedResult) {
+    function onScanSuccess(decodedText) {
         if (db[decodedText]) {
-            // 이미 수집한 곳이면 무시
             if(collectedLogs.includes(decodedText)) {
-                alert("이미 수집한 아치입니다! 다른 지역을 탐험해 보세요.");
+                alert("이미 수집한 아치입니다!");
                 return;
             }
-            
-            // 모달 띄우기
             currentScannedId = decodedText;
             const data = db[decodedText];
             document.getElementById("modalImg").src = data.img;
             document.getElementById("modalTitle").innerText = data.title;
             document.getElementById("modalText").innerText = data.story;
             document.getElementById("storyModal").style.display = "block";
-            
-            // 스캐너 잠시 멈춤
             html5QrcodeScanner.pause();
-        } else {
-            // 시스템 QR이 아닌 일반 QR을 찍었을 때 무시하거나 경고
-            alert("유효하지 않은 해양경찰 QR코드입니다.");
         }
     }
 
-    // 5. 팝업 닫고 보상 획득 처리
     function closeModal() {
         collectedLogs.push(currentScannedId);
-        localStorage.setItem('archieLogs_v2', JSON.stringify(collectedLogs)); // 스마트폰에 저장
-        
+        localStorage.setItem('archieLogs_v2', JSON.stringify(collectedLogs));
         document.getElementById("storyModal").style.display = "none";
         renderGallery();
-        html5QrcodeScanner.resume(); // 스캐너 재시작
+        html5QrcodeScanner.resume();
     }
 
-    // 6. 데모 테스트용 초기화 함수
     function resetData() {
         if(confirm("모든 수집 데이터를 초기화하시겠습니까?")) {
             localStorage.removeItem('archieLogs_v2');
@@ -153,40 +135,9 @@
         }
     }
 
-    // 초기 실행
     renderGallery();
     const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-    html5QrcodeScanner.render(onScanSuccess, (error) => {});
+    html5QrcodeScanner.render(onScanSuccess, () => {});
 </script>
-<hr style="margin-top: 50px; border: 1px solid #ccc;">
-<h3 style="color: #333;">📢 [테스트용 진짜 QR 코드 모음]</h3>
-<p style="font-size: 13px; color: #666;">아래 QR 코드를 스마트폰 카메라로 스캔하면 각 아치가 정상적으로 수집됩니다.</p>
-
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; background: #fff; border-radius: 10px; max-width: 500px; margin: 0 auto 50px;">
-    <div style="text-align:center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_JUNGBU" alt="중부">
-        <div style="font-size:12px; font-weight:bold; margin-top:5px;">중부 방제 아치</div>
-    </div>
-    <div style="text-align:center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_SEOHAE" alt="서해">
-        <div style="font-size:12px; font-weight:bold; margin-top:5px;">서해 수호 아치</div>
-    </div>
-    <div style="text-align:center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_NAMHAE" alt="남해">
-        <div style="font-size:12px; font-weight:bold; margin-top:5px;">남해 구조 아치</div>
-    </div>
-    <div style="text-align:center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_DONGHAE" alt="동해">
-        <div style="font-size:12px; font-weight:bold; margin-top:5px;">동해 안전 아치</div>
-    </div>
-    <div style="text-align:center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_JEJU" alt="제주">
-        <div style="font-size:12px; font-weight:bold; margin-top:5px;">제주 생태 아치</div>
-    </div>
-    <div style="text-align:center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=QR_MAIN" alt="본청">
-        <div style="font-size:12px; font-weight:bold; margin-top:5px;">본청 안전 아치</div>
-    </div>
-</div>
 </body>
 </html>
