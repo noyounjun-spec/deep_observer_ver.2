@@ -3,35 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>해양경찰 심해의 기록자 (데모용)</title>
+    <title>해양경찰 심해의 기록자 (영상 연동 데모)</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f8ff; margin: 0; padding: 10px; text-align: center; padding-bottom: 50px; }
         h2 { color: #003366; margin-bottom: 5px; }
         .desc { font-size: 14px; color: #555; margin-bottom: 20px; }
         #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        
-        /* 캐릭터 도감 UI */
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
         .character-card { width: 100px; height: 130px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px; }
         .character-img { width: 80px; height: 80px; object-fit: contain; filter: grayscale(100%); opacity: 0.3; transition: 0.5s; }
         .character-img.active { filter: grayscale(0%); opacity: 1; }
         .char-name { font-size: 12px; font-weight: bold; margin-top: 5px; color: #333; text-align: center; word-break: keep-all; }
         
-        /* 스토리 팝업 UI */
-        #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; z-index: 1000; }
-        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: #333; padding: 20px; border-radius: 15px; width: 80%; max-width: 350px; text-align: center; }
-        .modal-img { width: 150px; height: 150px; object-fit: contain; margin-bottom: 15px; }
-        .modal-title { font-size: 20px; font-weight: bold; color: #0056b3; margin-bottom: 10px; }
-        .modal-text { font-size: 14px; line-height: 1.5; margin-bottom: 20px; text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px;}
-        button { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        /* 스토리 팝업 UI 수정 (유튜브 영상용 공간 추가) */
+        #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; z-index: 1000; overflow-y: auto; }
+        .modal-content { position: relative; margin: 10% auto; background: white; color: #333; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-title { font-size: 22px; font-weight: bold; color: #0056b3; margin-bottom: 15px; }
         
-        /* 완료 배너 */
+        /* 유튜브 반응형 래퍼 */
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 10px; margin-bottom: 15px; background: #000; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        
+        .modal-text { font-size: 14px; line-height: 1.6; margin-bottom: 20px; text-align: left; background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #0056b3; }
+        button { background: #0056b3; color: white; border: none; padding: 15px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: 0.3s; }
+        button:active { background: #003d82; }
+        
         #completionBanner { display: none; background: #ff9900; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; font-weight: bold; animation: pop 0.5s ease-in-out; }
         @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
         .reset-btn { margin-top: 30px; background: #ccc; color: #333; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
         
-        /* 하단 QR 가이드 영역 */
         .demo-qr-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed #bbb; }
         .qr-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 15px; }
         .qr-item { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -42,23 +43,19 @@
     <h2>🌊 심해의 기록자</h2>
     <p class="desc">현장의 QR을 스캔하여 숨겨진 해경의 활약상을 확인하고<br>6개의 아치를 모두 모아 키링을 받으세요!</p>
 
-    <!-- 스캐너 -->
     <div id="reader"></div>
 
-    <!-- 탈출/성공 배너 -->
     <div id="completionBanner">
         🎉 축하합니다! 모든 구역의 아치를 모았습니다!<br><br>
         이 화면을 본청 안내데스크에 보여주고<br>한정판 아치 키링 세트로 교환하세요!
     </div>
 
-    <!-- 도감 -->
     <div class="gallery" id="galleryContainer"></div>
     <button class="reset-btn" onclick="resetData()">데이터 초기화 (테스트용)</button>
 
-    <!-- 실시간 생성되는 진짜 QR 코드 테스트 존 -->
     <div class="demo-qr-section">
         <h3 style="color:#d9534f;">🖥️ 데모 테스트용 QR 코드</h3>
-        <p style="font-size:12px; color:#555;">스마트폰 카메라로 아래 QR 코드를 직접 스캔하여 테스트하세요.</p>
+        <p style="font-size:12px; color:#555;">모니터에 이 화면을 띄워두고 스마트폰으로 스캔해 보세요.</p>
         <div class="qr-grid">
             <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_JUNGBU"><br><small>중부 방제</small></div>
             <div class="qr-item"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=QR_SEOHAE"><br><small>서해 수호</small></div>
@@ -69,34 +66,32 @@
         </div>
     </div>
 
-    <!-- 모달 팝업 -->
     <div id="storyModal">
         <div class="modal-content">
-            <img id="modalImg" class="modal-img" src="" alt="캐릭터">
             <div class="modal-title" id="modalTitle">지역 발견!</div>
+            
+            <div class="video-wrapper">
+                <iframe id="modalVideo" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+
             <div class="modal-text" id="modalText">스토리 내용</div>
             <button onclick="closeModal()">아치 획득하기!</button>
         </div>
     </div>
 
 <script>
-    // 💡 사진 파일명을 캡처화면에 적힌 한글 이름 그대로 맵핑했습니다.
+    // 💡 유튜브 ID(videoId)가 추가된 데이터베이스입니다!
     const db = {
-        "QR_JUNGBU": { id: "jungbu", name: "중부 방제 아치", img: "중부 아치.png", title: "수도권 해양 오염 방제", story: "해양 오염 사고 발생! 바다에 유출된 기름과 쓰레기를 신속히 걷어내어 수도권 바다를 깨깝하게 지켜냈습니다." },
-        "QR_SEOHAE": { id: "seohae", name: "서해 수호 아치", img: "서해 아치.png", title: "불법 조업 어선 단속", story: "불법 조업 외국 어선 단속 완료! 우리 어민들의 소중한 자산인 꽃게와 조기 등 어족 자원을 안전하게 보호했습니다." },
-        "QR_NAMHAE": { id: "namhae", name: "남해 구조 아치", img: "남해 아치.png", title: "해상 조난 선박 구조", story: "복잡한 해상 교통망에서 발생한 선박 조난 사고! 신속한 출동과 구조망 투척으로 소중한 생명을 구했습니다." },
-        "QR_DONGHAE":{ id: "donghae", name: "동해 안전 아치", img: "동해 아치.png", title: "해양 레저 안전 확보", story: "거친 파도 속 표류하던 서퍼 구출! 든든한 해상 순찰로 동해안의 해양 레저 안전을 굳건히 책임집니다." },
-        "QR_JEJU":   { id: "jeju", name: "제주 생태 아치", img: "제주 아치.png", title: "해양 생태계 보호", story: "폐그물에 걸린 남방큰돌돌고래 발견! 심해 잠수 구조로 제주의 아름다운 해양 생태계를 지켰습니다." },
-        "QR_MAIN":   { id: "main", name: "본청 안전 아치", img: "아치.png", title: "해양 안전 캠페인", story: "구명조끼 입기 실천! 해양경찰과 함께하는 안전한 바다 만들기 캠페인에 동참해 주셔서 감사합니다." }
+        "QR_JUNGBU": { id: "jungbu", name: "중부 방제 아치", img: "jungbu.png", title: "수도권 해양 오염 방제", story: "필리핀 기름 유출 현장까지 파견된 해경! 우리 바다뿐만 아니라 세계의 바다를 지키는 해양경찰의 땀방울을 확인하세요.", videoId: "jRX3fezEFIE" },
+        "QR_SEOHAE": { id: "seohae", name: "서해 수호 아치", img: "seohae.png", title: "불법 조업 어선 단속", story: "거친 파도를 뚫고 불법 조업 어선을 단속하는 실제 바디캠 영상입니다. 어민들의 소중한 생업을 지킵니다.", videoId: "p0N1MhwUgmo" },
+        "QR_NAMHAE": { id: "namhae", name: "남해 구조 아치", img: "namhae.png", title: "해상 조난 선박 구조", story: "부상을 딛고 다시 바다로 돌아간 김진영 대원! 국민의 생명을 구하기 위한 헌신과 열정을 만나보세요.", videoId: "gE7VunbFeHw" },
+        "QR_DONGHAE":{ id: "donghae", name: "동해 안전 아치", img: "donghae.png", title: "해양 레저 안전 확보", story: "일촉즉발의 상황! 거친 파도 속 표류자를 구출하는 현장 바디캠입니다. 든든한 해상 순찰로 안전을 책임집니다.", videoId: "OEUUeHKepco" },
+        "QR_JEJU":   { id: "jeju", name: "제주 생태 아치", img: "jeju.png", title: "해양 생태계 보호", story: "제주의 아름다운 바다와 생태계를 지키는 해양경찰의 또 다른 활약상! 생명 존중의 가치를 실천합니다.", videoId: "7CwtSgJvFdM" },
+        "QR_MAIN":   { id: "main", name: "본청 안전 아치", img: "main.png", title: "해양 안전 캠페인", story: "바다의 안전은 구명조끼부터! 해양경찰과 함께하는 안전한 바다 만들기 캠페인에 동참해 주셔서 감사합니다.", videoId: "9XLddsY_KQI" }
     };
 
     let collectedLogs = JSON.parse(localStorage.getItem('archieLogs_v2')) || [];
     let currentScannedId = "";
-
-    // 한글 깨짐 방지를 위해 파일명을 안전한 URL 주소로 변환하는 안전망 함수
-    function getSafeImgSrc(imgName) {
-        return encodeURIComponent(imgName);
-    }
 
     function renderGallery() {
         const container = document.getElementById("galleryContainer");
@@ -107,11 +102,9 @@
             const data = db[key];
             const isCollected = collectedLogs.includes(key);
             if(isCollected) collectedCount++;
-            
-            // 안전망 함수(getSafeImgSrc)를 통해미지 경로를 전달합니다.
             container.innerHTML += `
                 <div class="character-card">
-                    <img src="${getSafeImgSrc(data.img)}" class="character-img ${isCollected ? 'active' : ''}" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
+                    <img src="${data.img}" class="character-img ${isCollected ? 'active' : ''}" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
                     <div class="char-name">${isCollected ? data.name : '???'}</div>
                 </div>
             `;
@@ -132,18 +125,25 @@
             }
             currentScannedId = decodedText;
             const data = db[decodedText];
-            document.getElementById("modalImg").src = getSafeImgSrc(data.img);
+            
+            // 모달창에 텍스트 및 유튜브 영상 띄우기
             document.getElementById("modalTitle").innerText = data.title;
             document.getElementById("modalText").innerText = data.story;
+            document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + data.videoId + "?autoplay=1";
+            
             document.getElementById("storyModal").style.display = "block";
             html5QrcodeScanner.pause();
         }
     }
 
+    // 팝업 닫을 때 백그라운드에서 유튜브 소리가 계속 나는 것을 방지!
     function closeModal() {
         collectedLogs.push(currentScannedId);
         localStorage.setItem('archieLogs_v2', JSON.stringify(collectedLogs));
+        
         document.getElementById("storyModal").style.display = "none";
+        document.getElementById("modalVideo").src = ""; // 영상 종료
+        
         renderGallery();
         html5QrcodeScanner.resume();
     }
@@ -161,5 +161,4 @@
     html5QrcodeScanner.render(onScanSuccess, () => {});
 </script>
 </body>
-</html>
 </html>
