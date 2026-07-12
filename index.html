@@ -25,7 +25,7 @@
         #startScannerBtn:active { transform: scale(0.97); }
         #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 20px; }
         
-        /* 💡 수정된 갤러리 도감 UI (에픽/레전더리 카드형) */
+        /* 갤러리 도감 UI (에픽/레전더리 카드형) */
         .gallery-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 30px; margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 4px solid #0056b3; }
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
         .character-card { position: relative; width: 110px; height: 160px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border: 1px solid #eaeaea; }
@@ -93,11 +93,11 @@
     <!-- 스캔 시 나타나는 스토리 및 뽑기 결과 모달 -->
     <div id="storyModal">
         <div class="modal-content">
-            <!-- 1단계: 해경 공통 미션 스토리 -->
+            <!-- 1단계: 해경 랜덤 미션 스토리 -->
             <div id="step1">
                 <div style="font-size:22px; font-weight:bold; margin-bottom:15px; color:#0056b3;">🌊 긴급 해양 출동!</div>
                 <div class="video-wrapper">
-                    <!-- 멋진 해경 홍보/바디캠 영상 공통 사용 -->
+                    <!-- 스캔할 때마다 영상이 랜덤으로 들어가는 자리 -->
                     <iframe id="modalVideo" src="" allow="autoplay"></iframe>
                 </div>
                 <div style="margin-bottom:20px; font-size:14px; text-align:left; background:#f4f6f9; padding:15px; border-radius:8px;">
@@ -120,6 +120,16 @@
     </div>
 
 <script>
+    // --- 💡 랜덤으로 재생될 유튜브 영상 ID 목록 ---
+    const youtubeVideos = [
+        "7CwtSgJvFdM", // 제주 생태 관련
+        "jRX3fezEFIE", // 필리핀 방제 지원
+        "gE7VunbFeHw", // 바다위로 돌아간 김진영
+        "p0N1MhwUgmo", // 바디캠
+        "OEUUeHKepco", // 바디캠 2
+        "9XLddsY_KQI"  // 안전 캠페인
+    ];
+
     // --- 💡 확률 및 캐릭터 데이터베이스 ---
     // 에픽(15% * 6 = 90%), 레전더리(5% * 2 = 10%)
     const characterDB = [
@@ -175,7 +185,7 @@
         html5QrcodeScanner.render(onScanSuccess, () => {});
     }
 
-    // 도감 렌더링 (보내주신 두 번째 이미지 UI 적용)
+    // 도감 렌더링 
     function renderGallery() {
         const userCol = usersDB[currentUser].collection;
         const container = document.getElementById("galleryContainer");
@@ -202,13 +212,14 @@
     // 단일 QR 스캔 성공 시
     function onScanSuccess(decodedText) {
         if (decodedText === "KCG_GACHA_EVENT") {
-            // 스캐너 정지 및 숨김 (한 번 뽑을 때마다 버튼을 다시 누르게 유도)
+            // 스캐너 정지 및 숨김 
             html5QrcodeScanner.clear();
             document.getElementById('reader').style.display = 'none';
             document.getElementById('startScannerBtn').style.display = 'block';
 
-            // 공통 영상 세팅 (해경 바디캠 영상 중 하나)
-            document.getElementById("modalVideo").src = "https://www.youtube.com/embed/p0N1MhwUgmo?autoplay=1";
+            // 💡 유튜브 영상 랜덤 선택 
+            const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
+            document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
             
             // 모달 열기
             document.getElementById("step1").style.display = "block";
