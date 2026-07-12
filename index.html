@@ -13,6 +13,12 @@
         /* 인증 및 메인 UI */
         .auth-container { max-width: 320px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .auth-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        
+        /* 💡 비밀번호 토글 UI 추가 */
+        .password-container { position: relative; width: 100%; margin: 8px 0; }
+        .password-container .auth-input { margin: 0; padding-right: 40px; } /* 아이콘 자리 확보 */
+        .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; color: #888; user-select: none; }
+        
         .auth-btn { background: #003366; color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; transition: 0.2s; }
         .auth-btn:hover { background: #002244; }
         .auth-link { font-size: 12px; color: #0056b3; cursor: pointer; margin-top: 15px; display: inline-block; text-decoration: underline; }
@@ -61,7 +67,12 @@
         <div id="loginBox" class="auth-container">
             <h3 style="margin-top:0;">로그인</h3>
             <input type="text" id="loginId" class="auth-input" placeholder="아이디 (또는 휴대폰 번호)">
-            <input type="password" id="loginPw" class="auth-input" placeholder="비밀번호">
+            
+            <div class="password-container">
+                <input type="password" id="loginPw" class="auth-input" placeholder="비밀번호">
+                <span class="toggle-pw" onclick="togglePassword('loginPw', this)">👁️</span>
+            </div>
+            
             <button class="auth-btn" onclick="login()">탐험 시작하기</button>
             <div style="margin-top: 15px;">
                 <span style="font-size: 13px; color: #666;">계정이 없으신가요? </span>
@@ -73,7 +84,12 @@
         <div id="signupBox" class="auth-container" style="display: none;">
             <h3 style="margin-top:0;">회원가입</h3>
             <input type="text" id="signupId" class="auth-input" placeholder="사용할 아이디 입력">
-            <input type="password" id="signupPw" class="auth-input" placeholder="사용할 비밀번호 입력">
+            
+            <div class="password-container">
+                <input type="password" id="signupPw" class="auth-input" placeholder="사용할 비밀번호 입력">
+                <span class="toggle-pw" onclick="togglePassword('signupPw', this)">👁️</span>
+            </div>
+            
             <button class="auth-btn" onclick="signup()">가입 완료</button>
             <div style="margin-top: 15px;">
                 <span class="auth-link" style="margin-top:0;" onclick="toggleAuth('loginBox')">로그인 화면으로 돌아가기</span>
@@ -141,14 +157,25 @@
         { id: "c_leg2", name: "해경 특공 아치", img: "해경 아치 ver.2.png", rarity: "레전더리", class: "legendary", prob: 5 }
     ];
 
-    // 데이터베이스 버전업 (충돌 방지)
     let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v4')) || {};
     let currentUser = null;
     let html5QrcodeScanner = null;
     let currentlyDrawnChar = null;
     
-    // 💡 1시간 쿨타임 (밀리초 단위)
+    // 1시간 쿨타임 (밀리초 단위)
     const COOLDOWN_TIME = 60 * 60 * 1000; 
+
+    // 💡 비밀번호 숨기기/보이기 토글 함수
+    function togglePassword(inputId, iconElement) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            iconElement.style.opacity = "0.5"; // 텍스트가 보일 땐 아이콘 흐리게
+        } else {
+            input.type = "password";
+            iconElement.style.opacity = "1";
+        }
+    }
 
     // 화면 전환
     function toggleAuth(boxId) {
@@ -171,6 +198,10 @@
         localStorage.setItem('archieGachaDB_v4', JSON.stringify(usersDB));
         
         alert("회원가입이 완료되었습니다! 로그인해주세요.");
+        
+        // 입력창 비우고 로그인 화면으로
+        document.getElementById('signupId').value = "";
+        document.getElementById('signupPw').value = "";
         toggleAuth('loginBox');
     }
 
@@ -209,7 +240,7 @@
         const lastScan = usersDB[currentUser].lastScanTime;
         const now = Date.now();
         
-        // 💡 1시간이 안 지났으면 팝업 띄우고 차단
+        // 1시간이 안 지났으면 팝업 띄우고 차단
         if (now - lastScan < COOLDOWN_TIME) {
             const timeLeftMs = COOLDOWN_TIME - (now - lastScan);
             const leftMinutes = Math.ceil(timeLeftMs / 1000 / 60);
@@ -237,7 +268,7 @@
             document.getElementById('reader').style.display = 'none';
             document.getElementById('startScannerBtn').style.display = 'block';
 
-            // 💡 스캔 성공 시 현재 시간을 기록 (다음 1시간 동안 스캔 금지됨)
+            // 스캔 성공 시 현재 시간을 기록 (다음 1시간 동안 스캔 금지됨)
             usersDB[currentUser].lastScanTime = Date.now();
             localStorage.setItem('archieGachaDB_v4', JSON.stringify(usersDB));
 
