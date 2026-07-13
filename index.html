@@ -4,17 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>해양경찰 심해의 기록자</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- 내부 스캐너 라이브러리 완전 삭제됨 -->
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; text-align: center; padding-bottom: 50px; color: #333; }
         h2 { color: #003366; margin-bottom: 5px; }
         .desc { font-size: 14px; color: #555; margin-bottom: 20px; }
         
-        /* 인증 및 메인 UI */
         .auth-container { max-width: 320px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .auth-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         
-        /* 비밀번호 토글 UI */
         .password-container { position: relative; width: 100%; margin: 8px 0; }
         .password-container .auth-input { margin: 0; padding-right: 40px; }
         .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; color: #888; user-select: none; }
@@ -28,30 +26,22 @@
         .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; font-size: 14px; font-weight: bold;}
         .logout-btn { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
         
-        /* 메인 스캐너 영역 */
-        #startScannerBtn { background: #0056b3; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: 0.2s; }
-        #startScannerBtn:active { transform: scale(0.97); }
-        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 20px; }
-        
-        /* 갤러리 도감 UI */
-        .gallery-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 30px; margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 4px solid #0056b3; }
+        .gallery-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 4px solid #0056b3; }
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
         .character-card { position: relative; width: 110px; height: 160px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border: 1px solid #eaeaea; }
         
-        /* 💡 5단계 등급 뱃지 디자인 미리 셋업 완료! */
         .badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .badge.common { background-color: #9ca3af; color: white; } /* 일반 */
-        .badge.rare { background-color: #3b82f6; color: white; } /* 희귀 */
-        .badge.epic { background-color: #a855f7; color: white; } /* 에픽 */
-        .badge.legendary { background-color: #eab308; color: white; } /* 레전더리 */
-        .badge.mythic { background-color: #ef4444; color: white; } /* 신화 */
+        .badge.common { background-color: #9ca3af; color: white; }
+        .badge.rare { background-color: #3b82f6; color: white; }
+        .badge.epic { background-color: #a855f7; color: white; }
+        .badge.legendary { background-color: #eab308; color: white; }
+        .badge.mythic { background-color: #ef4444; color: white; }
         
         .character-img { width: 80px; height: 80px; object-fit: contain; margin-top: 15px; margin-bottom: 10px; transition: 0.3s; }
         .character-img.locked { opacity: 0.1; filter: grayscale(100%); }
         .char-name { font-size: 13px; font-weight: bold; color: #333; text-align: center; }
         .char-name.locked { color: #aaa; font-size: 16px; }
         
-        /* 모달 (뽑기 연출) */
         #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; }
         .modal-content { position: relative; margin: 10% auto; background: white; color: #333; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; margin-bottom: 15px; border-radius: 8px; }
@@ -60,8 +50,7 @@
         .reward-img { width: 200px; height: 200px; object-fit: contain; margin: 0 auto 15px; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         
-        /* 데모 QR 영역 */
-        .demo-qr-section { margin-top: 50px; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: none; }
+        .demo-qr-section { margin-top: 40px; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: none; }
     </style>
 </head>
 <body>
@@ -73,29 +62,25 @@
         <div id="loginBox" class="auth-container">
             <h3 style="margin-top:0;">로그인</h3>
             <input type="text" id="loginId" class="auth-input" placeholder="아이디 (또는 휴대폰 번호)">
-            
             <div class="password-container">
                 <input type="password" id="loginPw" class="auth-input" placeholder="비밀번호">
                 <span class="toggle-pw" onclick="togglePassword('loginPw', this)">👁️</span>
             </div>
-            
             <button class="auth-btn" onclick="login()">탐험 시작하기</button>
             <div style="margin-top: 15px;">
                 <span style="font-size: 13px; color: #666;">계정이 없으신가요? </span>
                 <span class="auth-link" style="margin-top:0;" onclick="toggleAuth('signupBox')">회원가입</span>
             </div>
-            <button class="reset-btn" onclick="hardReset()">전체 데이터 초기화 (테스트용)</button>
+            <button class="reset-btn" onclick="hardReset()">전체 데이터 초기화</button>
         </div>
 
         <div id="signupBox" class="auth-container" style="display: none;">
             <h3 style="margin-top:0;">회원가입</h3>
             <input type="text" id="signupId" class="auth-input" placeholder="사용할 아이디 입력">
-            
             <div class="password-container">
                 <input type="password" id="signupPw" class="auth-input" placeholder="사용할 비밀번호 입력">
                 <span class="toggle-pw" onclick="togglePassword('signupPw', this)">👁️</span>
             </div>
-            
             <button class="auth-btn" onclick="signup()">가입 완료</button>
             <div style="margin-top: 15px;">
                 <span class="auth-link" style="margin-top:0;" onclick="toggleAuth('loginBox')">로그인 화면으로 돌아가기</span>
@@ -109,19 +94,18 @@
             <button class="logout-btn" onclick="logout()">로그아웃</button>
         </div>
         
-        <button id="startScannerBtn" onclick="startScanner()">📷 공통 미션 QR 스캔하기</button>
-        <div id="reader"></div>
-        
         <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/<span id="totalCount">8</span>)</div>
         <div class="gallery" id="galleryContainer"></div>
         
+        <!-- 데모용 QR 코드 (실제 배포 시 이 이미지를 캡처해서 프린트하시면 됩니다) -->
         <div class="demo-qr-section" id="demoQrArea">
-            <h3 style="color:#0056b3; margin-bottom:5px;">🖥️ 스캔 전용 공통 QR</h3>
-            <p style="font-size:12px; color:#777; margin-bottom:15px;">※ 1시간에 1회 스캔하여 뽑기를 진행할 수 있습니다.</p>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=KCG_GACHA_EVENT" alt="공통 QR">
+            <h3 style="color:#0056b3; margin-bottom:5px;">📱 외부 카메라 전용 QR</h3>
+            <p style="font-size:12px; color:#777; margin-bottom:15px;">이 QR을 스마트폰 <b>기본 카메라</b>로 찍으면<br>사이트 접속과 동시에 뽑기가 실행됩니다!</p>
+            <img id="demoQrImg" src="" alt="외부 접속용 QR" style="width:150px; height:150px;">
         </div>
     </div>
 
+    <!-- 뽑기 모달 -->
     <div id="storyModal">
         <div class="modal-content">
             <div id="step1">
@@ -148,10 +132,8 @@
     </div>
 
 <script>
-    // 유튜브 영상 랜덤 배열
     const youtubeVideos = ["7CwtSgJvFdM", "jRX3fezEFIE", "gE7VunbFeHw", "p0N1MhwUgmo", "OEUUeHKepco", "9XLddsY_KQI"];
 
-    // 💡 캐릭터 데이터 (여기에 나중에 common, rare, mythic 등을 자유롭게 추가하세요!)
     const characterDB = [
         { id: "c_jungbu", name: "중부 아치", img: "중부 아치.png", rarity: "에픽", class: "epic", prob: 15 },
         { id: "c_seohae", name: "서해 아치", img: "서해 아치.png", rarity: "에픽", class: "epic", prob: 15 },
@@ -163,19 +145,28 @@
         { id: "c_leg2", name: "해경 특공 아치", img: "해경 아치 ver.2.png", rarity: "레전더리", class: "legendary", prob: 5 }
     ];
 
-    // 데이터베이스 버전 v5로 업데이트
-    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v5')) || {};
+    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v6')) || {};
     let currentUser = null;
-    let html5QrcodeScanner = null;
     let currentlyDrawnChar = null;
-    
-    // 1시간 쿨타임 (밀리초 단위)
     const COOLDOWN_TIME = 60 * 60 * 1000; 
 
-    // 총 캐릭터 수 자동 업데이트
     document.getElementById("totalCount").innerText = characterDB.length;
 
-    // 비밀번호 숨기기/보이기 토글 함수
+    // 💡 페이지 로드 시 실행
+    window.onload = function() {
+        // 1. 현재 사이트 주소에 "?action=gacha"를 붙여서 작동하는 외부 접속용 QR 자동 생성
+        const currentUrlBase = window.location.href.split('?')[0];
+        const gachaUrl = currentUrlBase + "?action=gacha";
+        document.getElementById('demoQrImg').src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(gachaUrl);
+
+        // 2. 로그인 세션 유지 (이게 있어야 QR 스캔 시 매번 로그인 안 물어봄)
+        const savedSession = localStorage.getItem('archieGacha_Session');
+        if (savedSession && usersDB[savedSession]) {
+            currentUser = savedSession;
+            proceedToApp(); // 로그인 건너뛰기
+        }
+    };
+
     function togglePassword(inputId, iconElement) {
         const input = document.getElementById(inputId);
         if (input.type === "password") {
@@ -187,14 +178,12 @@
         }
     }
 
-    // 화면 전환
     function toggleAuth(boxId) {
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('signupBox').style.display = 'none';
         document.getElementById(boxId).style.display = 'block';
     }
 
-    // 회원가입
     function signup() {
         const id = document.getElementById('signupId').value.trim();
         const pw = document.getElementById('signupPw').value.trim();
@@ -204,7 +193,7 @@
         if(usersDB[id]) return alert("이미 가입된 아이디입니다.");
 
         usersDB[id] = { password: pw, collection: [], lastScanTime: 0 };
-        localStorage.setItem('archieGachaDB_v5', JSON.stringify(usersDB));
+        localStorage.setItem('archieGachaDB_v6', JSON.stringify(usersDB));
         
         alert("회원가입이 완료되었습니다! 로그인해주세요.");
         document.getElementById('signupId').value = "";
@@ -212,80 +201,76 @@
         toggleAuth('loginBox');
     }
 
-    // 로그인
     function login() {
         const id = document.getElementById('loginId').value.trim();
         const pw = document.getElementById('loginPw').value.trim();
         
         if(usersDB[id] && usersDB[id].password === pw) {
             currentUser = id;
-            
-            document.getElementById('authWrap').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            document.getElementById('demoQrArea').style.display = 'block';
-            document.getElementById('welcomeMsg').innerText = `${id} 수호자님`;
-            
-            renderGallery();
+            localStorage.setItem('archieGacha_Session', currentUser); // 세션 저장
+            proceedToApp();
         } else {
             alert("아이디 또는 비밀번호가 틀렸습니다.");
         }
     }
 
+    // 💡 로그인 완료 or 세션 확인 시 진입하는 메인 함수
+    function proceedToApp() {
+        document.getElementById('authWrap').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        document.getElementById('demoQrArea').style.display = 'block';
+        document.getElementById('welcomeMsg').innerText = `${currentUser} 수호자님`;
+        
+        renderGallery();
+
+        // 💡 주소창에 ?action=gacha 가 있는지 확인 (외부 카메라로 QR 찍고 들어왔을 때)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'gacha') {
+            // 새로고침 방지를 위해 주소창에서 파라미터 지우기
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // 쿨타임 확인 후 바로 뽑기 모달 띄우기
+            triggerGachaFlow();
+        }
+    }
+
     function logout() {
-        location.reload();
+        localStorage.removeItem('archieGacha_Session');
+        window.location.href = window.location.href.split('?')[0]; // 파라미터 떼고 새로고침
     }
     
     function hardReset() {
         if(confirm("모든 유저 데이터와 도감이 완전히 삭제됩니다. 정말 하시겠습니까?")) {
-            localStorage.removeItem('archieGachaDB_v5');
-            location.reload();
+            localStorage.removeItem('archieGachaDB_v6');
+            localStorage.removeItem('archieGacha_Session');
+            window.location.href = window.location.href.split('?')[0];
         }
     }
 
-    // 스캐너 및 쿨타임
-    function startScanner() {
-        const lastScan = usersDB[currentUser].lastScanTime;
+    // 💡 뽑기 통합 실행 함수 (외부 QR 접속 시 작동)
+    function triggerGachaFlow() {
+        const lastScan = usersDB[currentUser].lastScanTime || 0;
         const now = Date.now();
         
+        // 1시간 쿨타임 방어
         if (now - lastScan < COOLDOWN_TIME) {
             const timeLeftMs = COOLDOWN_TIME - (now - lastScan);
             const leftMinutes = Math.ceil(timeLeftMs / 1000 / 60);
             return alert(`🚫 아직 바다의 기운이 모이지 않았습니다!\n약 ${leftMinutes}분 후에 다시 시도해주세요.`);
         }
 
-        document.getElementById('startScannerBtn').style.display = 'none';
-        document.getElementById('reader').style.display = 'block';
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
-        html5QrcodeScanner.render(onScanSuccess, () => {});
+        // 스캔 시간 갱신
+        usersDB[currentUser].lastScanTime = Date.now();
+        localStorage.setItem('archieGachaDB_v6', JSON.stringify(usersDB));
+
+        // 랜덤 영상 재생
+        const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
+        document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
+        
+        document.getElementById("step1").style.display = "block";
+        document.getElementById("step2").style.display = "none";
+        document.getElementById("storyModal").style.display = "block";
     }
 
-    function onScanSuccess(decodedText) {
-        if (decodedText === "KCG_GACHA_EVENT") {
-            const lastScan = usersDB[currentUser].lastScanTime;
-            const now = Date.now();
-            if (now - lastScan < COOLDOWN_TIME) {
-                alert("비정상적인 접근입니다. 대기 시간을 지켜주세요.");
-                html5QrcodeScanner.clear();
-                return;
-            }
-
-            html5QrcodeScanner.clear();
-            document.getElementById('reader').style.display = 'none';
-            document.getElementById('startScannerBtn').style.display = 'block';
-
-            usersDB[currentUser].lastScanTime = Date.now();
-            localStorage.setItem('archieGachaDB_v5', JSON.stringify(usersDB));
-
-            const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
-            document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
-            
-            document.getElementById("step1").style.display = "block";
-            document.getElementById("step2").style.display = "none";
-            document.getElementById("storyModal").style.display = "block";
-        }
-    }
-
-    // 뽑기 로직
     function executeGacha() {
         document.getElementById("modalVideo").src = "";
         
@@ -301,7 +286,6 @@
             }
         }
 
-        // 💡 5단계 등급 색상 매핑 (미리 다 연결해 둠!)
         const colorMap = {
             'common': '#9ca3af',
             'rare': '#3b82f6',
@@ -331,7 +315,7 @@
     function closeModal() {
         if(!usersDB[currentUser].collection.includes(currentlyDrawnChar.id)) {
             usersDB[currentUser].collection.push(currentlyDrawnChar.id);
-            localStorage.setItem('archieGachaDB_v5', JSON.stringify(usersDB));
+            localStorage.setItem('archieGachaDB_v6', JSON.stringify(usersDB));
         }
         
         document.getElementById("storyModal").style.display = "none";
