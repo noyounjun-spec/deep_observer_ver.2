@@ -30,21 +30,28 @@
         #startScannerBtn:active { transform: scale(0.97); }
         #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 20px; }
         
+        /* 💡 도감 갤러리 레이아웃 완벽 동기화 */
         .gallery-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 4px solid #0056b3; }
-        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-        .character-card { position: relative; width: 110px; height: 160px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border: 1px solid #eaeaea; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 12px; padding: 5px; justify-items: center; }
         
-        .badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        /* 💡 카드 디자인 (사진과 동일한 비율 및 여백) */
+        .character-card { position: relative; width: 105px; height: 155px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; padding: 10px; border: 1px solid #f0f0f0; box-sizing: border-box; }
+        
+        /* 💡 뱃지 디자인 */
+        .badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2; }
         .badge.common { background-color: #9ca3af; color: white; }
         .badge.rare { background-color: #3b82f6; color: white; }
         .badge.epic { background-color: #a855f7; color: white; }
         .badge.legendary { background-color: #eab308; color: white; }
         .badge.mythic { background-color: #ef4444; color: white; }
         
-        .character-img { width: 80px; height: 80px; object-fit: contain; margin-top: 15px; margin-bottom: 10px; transition: 0.3s; }
-        .character-img.locked { opacity: 0.1; filter: grayscale(100%); }
+        /* 💡 이미지 회색 박스 래퍼 (미획득 시 사진처럼 보임) */
+        .character-img-wrapper { width: 85px; height: 85px; background-color: #f3f4f6; border-radius: 8px; margin-top: 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .character-img { width: 100%; height: 100%; object-fit: cover; } /* 꽉 차게 비율 유지 */
+        
+        /* 💡 캐릭터 이름 텍스트 */
         .char-name { font-size: 13px; font-weight: bold; color: #333; text-align: center; }
-        .char-name.locked { color: #aaa; font-size: 16px; }
+        .char-name.locked { color: #aaa; }
         
         #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; }
         .modal-content { position: relative; margin: 10% auto; background: white; color: #333; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
@@ -142,9 +149,8 @@
 <script>
     const youtubeVideos = ["7CwtSgJvFdM", "jRX3fezEFIE", "gE7VunbFeHw", "p0N1MhwUgmo", "OEUUeHKepco", "9XLddsY_KQI"];
 
-    // 💡 새로 추가된 일반(common) 캐릭터 포함 9종 데이터! (확률 합계 100%)
     const characterDB = [
-        { id: "c_common1", name: "일반 아치", img: "KakaoTalk_20260713_093726672.png", rarity: "일반", class: "common", prob: 30 }, // 새로 추가!
+        { id: "c_common1", name: "일반 아치", img: "KakaoTalk_20260713_093726672.png", rarity: "일반", class: "common", prob: 30 },
         { id: "c_jungbu", name: "중부 아치", img: "중부 아치.png", rarity: "에픽", class: "epic", prob: 10 },
         { id: "c_seohae", name: "서해 아치", img: "서해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
         { id: "c_namhae", name: "남해 아치", img: "남해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
@@ -155,14 +161,13 @@
         { id: "c_leg2", name: "해경 특공 아치", img: "해경 아치 ver.2.png", rarity: "레전더리", class: "legendary", prob: 5 }
     ];
 
-    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v9')) || {}; // DB 버전 v9 업데이트
+    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v10')) || {};
     let currentUser = null;
     let html5QrcodeScanner = null;
     let currentlyDrawnChar = null;
 
     document.getElementById("totalCount").innerText = characterDB.length;
 
-    // 페이지 로드 시 실행 (자동 QR 생성 및 로그인 유지)
     window.onload = function() {
         const currentUrlBase = window.location.href.split('?')[0];
         const gachaUrl = currentUrlBase + "?action=gacha";
@@ -201,7 +206,7 @@
         if(usersDB[id]) return alert("이미 가입된 아이디입니다.");
 
         usersDB[id] = { password: pw, collection: [] };
-        localStorage.setItem('archieGachaDB_v9', JSON.stringify(usersDB));
+        localStorage.setItem('archieGachaDB_v10', JSON.stringify(usersDB));
         
         alert("회원가입이 완료되었습니다! 로그인해주세요.");
         document.getElementById('signupId').value = "";
@@ -230,7 +235,6 @@
         
         renderGallery();
 
-        // 주소창에 파라미터가 있으면 바로 뽑기 실행 (외부 카메라용)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('action') === 'gacha') {
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -245,13 +249,12 @@
     
     function hardReset() {
         if(confirm("모든 유저 데이터와 도감이 완전히 삭제됩니다. 정말 하시겠습니까?")) {
-            localStorage.removeItem('archieGachaDB_v9');
+            localStorage.removeItem('archieGachaDB_v10');
             localStorage.removeItem('archieGacha_Session');
             window.location.href = window.location.href.split('?')[0];
         }
     }
 
-    // 내부 스캐너 기능 (시간 제한 없음)
     function startScanner() {
         document.getElementById('startScannerBtn').style.display = 'none';
         document.getElementById('reader').style.display = 'block';
@@ -260,7 +263,6 @@
         html5QrcodeScanner.render(onScanSuccess, () => {});
     }
 
-    // 내부 스캐너로 스캔 성공 시
     function onScanSuccess(decodedText) {
         if (decodedText.includes("action=gacha") || decodedText === "KCG_GACHA_EVENT") {
             html5QrcodeScanner.clear();
@@ -270,7 +272,6 @@
         }
     }
 
-    // 뽑기 통합 실행 함수 (내/외부 공통 - 시간 제한 없음)
     function triggerGachaFlow() {
         const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
         document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
@@ -324,13 +325,14 @@
     function closeModal() {
         if(!usersDB[currentUser].collection.includes(currentlyDrawnChar.id)) {
             usersDB[currentUser].collection.push(currentlyDrawnChar.id);
-            localStorage.setItem('archieGachaDB_v9', JSON.stringify(usersDB));
+            localStorage.setItem('archieGachaDB_v10', JSON.stringify(usersDB));
         }
         
         document.getElementById("storyModal").style.display = "none";
         renderGallery();
     }
 
+    // 💡 도감 렌더링 수정 (사진처럼 미획득 시 빈 상자로)
     function renderGallery() {
         const userCol = usersDB[currentUser].collection;
         const container = document.getElementById("galleryContainer");
@@ -340,10 +342,14 @@
         characterDB.forEach(char => {
             const hasChar = userCol.includes(char.id);
             if(hasChar) count++;
+            
+            // hasChar(획득 여부)에 따라 img 태그를 그리거나 빈 공간으로 둠
             container.innerHTML += `
                 <div class="character-card">
                     <div class="badge ${char.class}">${char.rarity}</div>
-                    <img src="${hasChar ? char.img : char.img}" class="character-img ${hasChar ? '' : 'locked'}">
+                    <div class="character-img-wrapper">
+                        ${hasChar ? `<img src="${char.img}" class="character-img">` : ''}
+                    </div>
                     <div class="char-name ${hasChar ? '' : 'locked'}">${hasChar ? char.name : '???'}</div>
                 </div>
             `;
