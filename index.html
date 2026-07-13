@@ -14,9 +14,9 @@
         .auth-container { max-width: 320px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .auth-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         
-        /* 💡 비밀번호 토글 UI 추가 */
+        /* 비밀번호 토글 UI */
         .password-container { position: relative; width: 100%; margin: 8px 0; }
-        .password-container .auth-input { margin: 0; padding-right: 40px; } /* 아이콘 자리 확보 */
+        .password-container .auth-input { margin: 0; padding-right: 40px; }
         .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; color: #888; user-select: none; }
         
         .auth-btn { background: #003366; color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; transition: 0.2s; }
@@ -37,9 +37,15 @@
         .gallery-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 30px; margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 4px solid #0056b3; }
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
         .character-card { position: relative; width: 110px; height: 160px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border: 1px solid #eaeaea; }
+        
+        /* 💡 5단계 등급 뱃지 디자인 미리 셋업 완료! */
         .badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .badge.epic { background-color: #a855f7; color: white; }
-        .badge.legendary { background-color: #eab308; color: white; }
+        .badge.common { background-color: #9ca3af; color: white; } /* 일반 */
+        .badge.rare { background-color: #3b82f6; color: white; } /* 희귀 */
+        .badge.epic { background-color: #a855f7; color: white; } /* 에픽 */
+        .badge.legendary { background-color: #eab308; color: white; } /* 레전더리 */
+        .badge.mythic { background-color: #ef4444; color: white; } /* 신화 */
+        
         .character-img { width: 80px; height: 80px; object-fit: contain; margin-top: 15px; margin-bottom: 10px; transition: 0.3s; }
         .character-img.locked { opacity: 0.1; filter: grayscale(100%); }
         .char-name { font-size: 13px; font-weight: bold; color: #333; text-align: center; }
@@ -106,7 +112,7 @@
         <button id="startScannerBtn" onclick="startScanner()">📷 공통 미션 QR 스캔하기</button>
         <div id="reader"></div>
         
-        <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/8)</div>
+        <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/<span id="totalCount">8</span>)</div>
         <div class="gallery" id="galleryContainer"></div>
         
         <div class="demo-qr-section" id="demoQrArea">
@@ -135,7 +141,7 @@
                 <h2 id="gachaCharName" style="margin-top:0; color:#333;">캐릭터 이름</h2>
                 <img id="rewardImg" class="reward-img" src="">
                 <p id="dupMessage" style="color:#d9534f; font-weight:bold; font-size:14px; display:none;">이미 보유한 캐릭터입니다! (아쉽네요)</p>
-                <p id="newMessage" style="color:#28a745; font-weight:bold; font-size:14px; display:none;">새로운 희귀 캐릭터를 획득했습니다!</p>
+                <p id="newMessage" style="color:#28a745; font-weight:bold; font-size:14px; display:none;">새로운 캐릭터를 획득했습니다!</p>
                 <button class="action-btn" style="margin-top:15px;" onclick="closeModal()">도감 확인하기</button>
             </div>
         </div>
@@ -145,7 +151,7 @@
     // 유튜브 영상 랜덤 배열
     const youtubeVideos = ["7CwtSgJvFdM", "jRX3fezEFIE", "gE7VunbFeHw", "p0N1MhwUgmo", "OEUUeHKepco", "9XLddsY_KQI"];
 
-    // 캐릭터 데이터
+    // 💡 캐릭터 데이터 (여기에 나중에 common, rare, mythic 등을 자유롭게 추가하세요!)
     const characterDB = [
         { id: "c_jungbu", name: "중부 아치", img: "중부 아치.png", rarity: "에픽", class: "epic", prob: 15 },
         { id: "c_seohae", name: "서해 아치", img: "서해 아치.png", rarity: "에픽", class: "epic", prob: 15 },
@@ -157,7 +163,8 @@
         { id: "c_leg2", name: "해경 특공 아치", img: "해경 아치 ver.2.png", rarity: "레전더리", class: "legendary", prob: 5 }
     ];
 
-    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v4')) || {};
+    // 데이터베이스 버전 v5로 업데이트
+    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v5')) || {};
     let currentUser = null;
     let html5QrcodeScanner = null;
     let currentlyDrawnChar = null;
@@ -165,12 +172,15 @@
     // 1시간 쿨타임 (밀리초 단위)
     const COOLDOWN_TIME = 60 * 60 * 1000; 
 
-    // 💡 비밀번호 숨기기/보이기 토글 함수
+    // 총 캐릭터 수 자동 업데이트
+    document.getElementById("totalCount").innerText = characterDB.length;
+
+    // 비밀번호 숨기기/보이기 토글 함수
     function togglePassword(inputId, iconElement) {
         const input = document.getElementById(inputId);
         if (input.type === "password") {
             input.type = "text";
-            iconElement.style.opacity = "0.5"; // 텍스트가 보일 땐 아이콘 흐리게
+            iconElement.style.opacity = "0.5"; 
         } else {
             input.type = "password";
             iconElement.style.opacity = "1";
@@ -184,7 +194,7 @@
         document.getElementById(boxId).style.display = 'block';
     }
 
-    // 간단 회원가입
+    // 회원가입
     function signup() {
         const id = document.getElementById('signupId').value.trim();
         const pw = document.getElementById('signupPw').value.trim();
@@ -193,13 +203,10 @@
         if(pw.length < 4) return alert("비밀번호는 4자리 이상 입력해주세요.");
         if(usersDB[id]) return alert("이미 가입된 아이디입니다.");
 
-        // 신규 유저 생성 (도감 배열, 마지막 스캔 시간 변수 초기화)
         usersDB[id] = { password: pw, collection: [], lastScanTime: 0 };
-        localStorage.setItem('archieGachaDB_v4', JSON.stringify(usersDB));
+        localStorage.setItem('archieGachaDB_v5', JSON.stringify(usersDB));
         
         alert("회원가입이 완료되었습니다! 로그인해주세요.");
-        
-        // 입력창 비우고 로그인 화면으로
         document.getElementById('signupId').value = "";
         document.getElementById('signupPw').value = "";
         toggleAuth('loginBox');
@@ -230,7 +237,7 @@
     
     function hardReset() {
         if(confirm("모든 유저 데이터와 도감이 완전히 삭제됩니다. 정말 하시겠습니까?")) {
-            localStorage.removeItem('archieGachaDB_v4');
+            localStorage.removeItem('archieGachaDB_v5');
             location.reload();
         }
     }
@@ -240,7 +247,6 @@
         const lastScan = usersDB[currentUser].lastScanTime;
         const now = Date.now();
         
-        // 1시간이 안 지났으면 팝업 띄우고 차단
         if (now - lastScan < COOLDOWN_TIME) {
             const timeLeftMs = COOLDOWN_TIME - (now - lastScan);
             const leftMinutes = Math.ceil(timeLeftMs / 1000 / 60);
@@ -255,7 +261,6 @@
 
     function onScanSuccess(decodedText) {
         if (decodedText === "KCG_GACHA_EVENT") {
-            // 이중 쿨타임 체크 (비정상 접근 방지)
             const lastScan = usersDB[currentUser].lastScanTime;
             const now = Date.now();
             if (now - lastScan < COOLDOWN_TIME) {
@@ -268,11 +273,9 @@
             document.getElementById('reader').style.display = 'none';
             document.getElementById('startScannerBtn').style.display = 'block';
 
-            // 스캔 성공 시 현재 시간을 기록 (다음 1시간 동안 스캔 금지됨)
             usersDB[currentUser].lastScanTime = Date.now();
-            localStorage.setItem('archieGachaDB_v4', JSON.stringify(usersDB));
+            localStorage.setItem('archieGachaDB_v5', JSON.stringify(usersDB));
 
-            // 유튜브 영상 띄우기
             const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
             document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
             
@@ -298,7 +301,16 @@
             }
         }
 
-        const rarityColor = currentlyDrawnChar.class === 'epic' ? '#a855f7' : '#eab308';
+        // 💡 5단계 등급 색상 매핑 (미리 다 연결해 둠!)
+        const colorMap = {
+            'common': '#9ca3af',
+            'rare': '#3b82f6',
+            'epic': '#a855f7',
+            'legendary': '#eab308',
+            'mythic': '#ef4444'
+        };
+        const rarityColor = colorMap[currentlyDrawnChar.class] || '#333'; 
+
         document.getElementById("gachaRarityText").innerText = `[${currentlyDrawnChar.rarity}] 등급 등장!`;
         document.getElementById("gachaRarityText").style.color = rarityColor;
         document.getElementById("gachaCharName").innerText = currentlyDrawnChar.name;
@@ -319,7 +331,7 @@
     function closeModal() {
         if(!usersDB[currentUser].collection.includes(currentlyDrawnChar.id)) {
             usersDB[currentUser].collection.push(currentlyDrawnChar.id);
-            localStorage.setItem('archieGachaDB_v4', JSON.stringify(usersDB));
+            localStorage.setItem('archieGachaDB_v5', JSON.stringify(usersDB));
         }
         
         document.getElementById("storyModal").style.display = "none";
