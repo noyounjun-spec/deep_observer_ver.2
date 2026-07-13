@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>해양경찰 심해의 기록자</title>
-    <!-- 내부 스캐너 라이브러리 완전 삭제됨 -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; text-align: center; padding-bottom: 50px; color: #333; }
         h2 { color: #003366; margin-bottom: 5px; }
@@ -25,6 +25,10 @@
         #appContainer { display: none; }
         .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; font-size: 14px; font-weight: bold;}
         .logout-btn { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        
+        #startScannerBtn { background: #0056b3; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: 0.2s; }
+        #startScannerBtn:active { transform: scale(0.97); }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 20px; }
         
         .gallery-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 4px solid #0056b3; }
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
@@ -94,18 +98,22 @@
             <button class="logout-btn" onclick="logout()">로그아웃</button>
         </div>
         
+        <button id="startScannerBtn" onclick="startScanner()">📷 앱 내부 스캐너로 뽑기</button>
+        <div id="reader"></div>
+        
         <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/<span id="totalCount">8</span>)</div>
         <div class="gallery" id="galleryContainer"></div>
         
-        <!-- 데모용 QR 코드 (실제 배포 시 이 이미지를 캡처해서 프린트하시면 됩니다) -->
         <div class="demo-qr-section" id="demoQrArea">
-            <h3 style="color:#0056b3; margin-bottom:5px;">📱 외부 카메라 전용 QR</h3>
-            <p style="font-size:12px; color:#777; margin-bottom:15px;">이 QR을 스마트폰 <b>기본 카메라</b>로 찍으면<br>사이트 접속과 동시에 뽑기가 실행됩니다!</p>
-            <img id="demoQrImg" src="" alt="외부 접속용 QR" style="width:150px; height:150px;">
+            <h3 style="color:#0056b3; margin-bottom:5px;">📱 공통 미션 통합 QR</h3>
+            <p style="font-size:12px; color:#777; margin-bottom:15px;">
+                1) <b>스마트폰 기본 카메라</b>로 찍으면 바로 접속 및 뽑기!<br>
+                2) <b>앱 내부 스캐너</b>로 찍어도 정상 작동합니다.
+            </p>
+            <img id="demoQrImg" src="" alt="통합 QR" style="width:150px; height:150px;">
         </div>
     </div>
 
-    <!-- 뽑기 모달 -->
     <div id="storyModal">
         <div class="modal-content">
             <div id="step1">
@@ -145,25 +153,23 @@
         { id: "c_leg2", name: "해경 특공 아치", img: "해경 아치 ver.2.png", rarity: "레전더리", class: "legendary", prob: 5 }
     ];
 
-    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v6')) || {};
+    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v8')) || {};
     let currentUser = null;
+    let html5QrcodeScanner = null;
     let currentlyDrawnChar = null;
-    const COOLDOWN_TIME = 60 * 60 * 1000; 
 
     document.getElementById("totalCount").innerText = characterDB.length;
 
-    // 💡 페이지 로드 시 실행
+    // 페이지 로드 시 실행 (자동 QR 생성 및 로그인 유지)
     window.onload = function() {
-        // 1. 현재 사이트 주소에 "?action=gacha"를 붙여서 작동하는 외부 접속용 QR 자동 생성
         const currentUrlBase = window.location.href.split('?')[0];
         const gachaUrl = currentUrlBase + "?action=gacha";
         document.getElementById('demoQrImg').src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(gachaUrl);
 
-        // 2. 로그인 세션 유지 (이게 있어야 QR 스캔 시 매번 로그인 안 물어봄)
         const savedSession = localStorage.getItem('archieGacha_Session');
         if (savedSession && usersDB[savedSession]) {
             currentUser = savedSession;
-            proceedToApp(); // 로그인 건너뛰기
+            proceedToApp(); 
         }
     };
 
@@ -192,8 +198,8 @@
         if(pw.length < 4) return alert("비밀번호는 4자리 이상 입력해주세요.");
         if(usersDB[id]) return alert("이미 가입된 아이디입니다.");
 
-        usersDB[id] = { password: pw, collection: [], lastScanTime: 0 };
-        localStorage.setItem('archieGachaDB_v6', JSON.stringify(usersDB));
+        usersDB[id] = { password: pw, collection: [] };
+        localStorage.setItem('archieGachaDB_v8', JSON.stringify(usersDB));
         
         alert("회원가입이 완료되었습니다! 로그인해주세요.");
         document.getElementById('signupId').value = "";
@@ -207,14 +213,13 @@
         
         if(usersDB[id] && usersDB[id].password === pw) {
             currentUser = id;
-            localStorage.setItem('archieGacha_Session', currentUser); // 세션 저장
+            localStorage.setItem('archieGacha_Session', currentUser); 
             proceedToApp();
         } else {
             alert("아이디 또는 비밀번호가 틀렸습니다.");
         }
     }
 
-    // 💡 로그인 완료 or 세션 확인 시 진입하는 메인 함수
     function proceedToApp() {
         document.getElementById('authWrap').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
@@ -223,46 +228,48 @@
         
         renderGallery();
 
-        // 💡 주소창에 ?action=gacha 가 있는지 확인 (외부 카메라로 QR 찍고 들어왔을 때)
+        // 주소창에 파라미터가 있으면 바로 뽑기 실행 (외부 카메라용)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('action') === 'gacha') {
-            // 새로고침 방지를 위해 주소창에서 파라미터 지우기
             window.history.replaceState({}, document.title, window.location.pathname);
-            // 쿨타임 확인 후 바로 뽑기 모달 띄우기
             triggerGachaFlow();
         }
     }
 
     function logout() {
         localStorage.removeItem('archieGacha_Session');
-        window.location.href = window.location.href.split('?')[0]; // 파라미터 떼고 새로고침
+        window.location.href = window.location.href.split('?')[0]; 
     }
     
     function hardReset() {
         if(confirm("모든 유저 데이터와 도감이 완전히 삭제됩니다. 정말 하시겠습니까?")) {
-            localStorage.removeItem('archieGachaDB_v6');
+            localStorage.removeItem('archieGachaDB_v8');
             localStorage.removeItem('archieGacha_Session');
             window.location.href = window.location.href.split('?')[0];
         }
     }
 
-    // 💡 뽑기 통합 실행 함수 (외부 QR 접속 시 작동)
-    function triggerGachaFlow() {
-        const lastScan = usersDB[currentUser].lastScanTime || 0;
-        const now = Date.now();
+    // 💡 내부 스캐너 기능 (시간 제한 없음)
+    function startScanner() {
+        document.getElementById('startScannerBtn').style.display = 'none';
+        document.getElementById('reader').style.display = 'block';
         
-        // 1시간 쿨타임 방어
-        if (now - lastScan < COOLDOWN_TIME) {
-            const timeLeftMs = COOLDOWN_TIME - (now - lastScan);
-            const leftMinutes = Math.ceil(timeLeftMs / 1000 / 60);
-            return alert(`🚫 아직 바다의 기운이 모이지 않았습니다!\n약 ${leftMinutes}분 후에 다시 시도해주세요.`);
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+        html5QrcodeScanner.render(onScanSuccess, () => {});
+    }
+
+    // 💡 내부 스캐너로 스캔 성공 시
+    function onScanSuccess(decodedText) {
+        if (decodedText.includes("action=gacha") || decodedText === "KCG_GACHA_EVENT") {
+            html5QrcodeScanner.clear();
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('startScannerBtn').style.display = 'block';
+            triggerGachaFlow();
         }
+    }
 
-        // 스캔 시간 갱신
-        usersDB[currentUser].lastScanTime = Date.now();
-        localStorage.setItem('archieGachaDB_v6', JSON.stringify(usersDB));
-
-        // 랜덤 영상 재생
+    // 💡 뽑기 통합 실행 함수 (내/외부 공통 - 시간 제한 없음)
+    function triggerGachaFlow() {
         const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
         document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
         
@@ -315,7 +322,7 @@
     function closeModal() {
         if(!usersDB[currentUser].collection.includes(currentlyDrawnChar.id)) {
             usersDB[currentUser].collection.push(currentlyDrawnChar.id);
-            localStorage.setItem('archieGachaDB_v6', JSON.stringify(usersDB));
+            localStorage.setItem('archieGachaDB_v8', JSON.stringify(usersDB));
         }
         
         document.getElementById("storyModal").style.display = "none";
