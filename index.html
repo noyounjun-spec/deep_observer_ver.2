@@ -150,15 +150,32 @@
     const youtubeVideos = ["7CwtSgJvFdM", "jRX3fezEFIE", "gE7VunbFeHw", "p0N1MhwUgmo", "OEUUeHKepco", "9XLddsY_KQI"];
 
     const characterDB = [
-        { id: "c_common1", name: "일반 아치", img: "KakaoTalk_20260713_093726672.png", rarity: "일반", class: "common", prob: 30 },
-        { id: "c_jungbu", name: "중부 아치", img: "중부 아치.png", rarity: "에픽", class: "epic", prob: 10 },
-        { id: "c_seohae", name: "서해 아치", img: "서해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
-        { id: "c_namhae", name: "남해 아치", img: "남해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
-        { id: "c_donghae", name: "동해 아치", img: "동해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
-        { id: "c_jeju", name: "제주 아치", img: "제주 아치.png", rarity: "에픽", class: "epic", prob: 10 },
-        { id: "c_main", name: "본청 아치", img: "아치.png", rarity: "에픽", class: "epic", prob: 10 },
-        { id: "c_leg1", name: "해경 정복 아치", img: "해경 아치 ver.1.png", rarity: "레전더리", class: "legendary", prob: 5 },
-        { id: "c_leg2", name: "해경 특공 아치", img: "해경 아치 ver.2.png", rarity: "레전더리", class: "legendary", prob: 5 }
+        { id: "l1", name: "세종대왕", img: "세종대왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "l2", name: "광개토대왕", img: "광개토대왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "l3", name: "진흥왕", img: "진흥왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "l4", name: "근초고왕", img: "근초고왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "e1", name: "기사", img: "기사 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "e2", name: "마법사", img: "마법사 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "e3", name: "힐러", img: "힐러 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "e4", name: "도적", img: "도적 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "r1", name: "봄", img: "봄 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r2", name: "여름", img: "여름 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r3", name: "가을", img: "가을 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r4", name: "겨울", img: "겨울 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r5", name: "중부", img: "중부 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r6", name: "서해", img: "서해 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r7", name: "남해", img: "남해 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r8", name: "동해", img: "동해 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r9", name: "제주", img: "제주 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "c2", name: "과학자", img: "과학자 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c3", name: "농부", img: "농부 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c4", name: "산타", img: "산타 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c5", name: "신랑", img: "신랑 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c6", name: "신부", img: "신부 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c7", name: "의사", img: "의사 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c8", name: "잠수부", img: "잠수부 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c9", name: "학생", img: "학생 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c10", name: "화가", img: "화가 아치.png", rarity: "커먼", class: "common", prob: 4.88 }
     ];
 
     let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v10')) || {};
