@@ -101,7 +101,7 @@
         <button id="startScannerBtn" onclick="startScanner()">📷 앱 내부 스캐너로 뽑기</button>
         <div id="reader"></div>
         
-        <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/<span id="totalCount">8</span>)</div>
+        <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/<span id="totalCount">9</span>)</div>
         <div class="gallery" id="galleryContainer"></div>
         
         <div class="demo-qr-section" id="demoQrArea">
@@ -142,18 +142,20 @@
 <script>
     const youtubeVideos = ["7CwtSgJvFdM", "jRX3fezEFIE", "gE7VunbFeHw", "p0N1MhwUgmo", "OEUUeHKepco", "9XLddsY_KQI"];
 
+    // 💡 새로 추가된 일반(common) 캐릭터 포함 9종 데이터! (확률 합계 100%)
     const characterDB = [
-        { id: "c_jungbu", name: "중부 아치", img: "중부 아치.png", rarity: "에픽", class: "epic", prob: 15 },
-        { id: "c_seohae", name: "서해 아치", img: "서해 아치.png", rarity: "에픽", class: "epic", prob: 15 },
-        { id: "c_namhae", name: "남해 아치", img: "남해 아치.png", rarity: "에픽", class: "epic", prob: 15 },
-        { id: "c_donghae", name: "동해 아치", img: "동해 아치.png", rarity: "에픽", class: "epic", prob: 15 },
-        { id: "c_jeju", name: "제주 아치", img: "제주 아치.png", rarity: "에픽", class: "epic", prob: 15 },
-        { id: "c_main", name: "본청 아치", img: "아치.png", rarity: "에픽", class: "epic", prob: 15 },
+        { id: "c_common1", name: "일반 아치", img: "KakaoTalk_20260713_093726672.png", rarity: "일반", class: "common", prob: 30 }, // 새로 추가!
+        { id: "c_jungbu", name: "중부 아치", img: "중부 아치.png", rarity: "에픽", class: "epic", prob: 10 },
+        { id: "c_seohae", name: "서해 아치", img: "서해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
+        { id: "c_namhae", name: "남해 아치", img: "남해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
+        { id: "c_donghae", name: "동해 아치", img: "동해 아치.png", rarity: "에픽", class: "epic", prob: 10 },
+        { id: "c_jeju", name: "제주 아치", img: "제주 아치.png", rarity: "에픽", class: "epic", prob: 10 },
+        { id: "c_main", name: "본청 아치", img: "아치.png", rarity: "에픽", class: "epic", prob: 10 },
         { id: "c_leg1", name: "해경 정복 아치", img: "해경 아치 ver.1.png", rarity: "레전더리", class: "legendary", prob: 5 },
         { id: "c_leg2", name: "해경 특공 아치", img: "해경 아치 ver.2.png", rarity: "레전더리", class: "legendary", prob: 5 }
     ];
 
-    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v8')) || {};
+    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v9')) || {}; // DB 버전 v9 업데이트
     let currentUser = null;
     let html5QrcodeScanner = null;
     let currentlyDrawnChar = null;
@@ -199,7 +201,7 @@
         if(usersDB[id]) return alert("이미 가입된 아이디입니다.");
 
         usersDB[id] = { password: pw, collection: [] };
-        localStorage.setItem('archieGachaDB_v8', JSON.stringify(usersDB));
+        localStorage.setItem('archieGachaDB_v9', JSON.stringify(usersDB));
         
         alert("회원가입이 완료되었습니다! 로그인해주세요.");
         document.getElementById('signupId').value = "";
@@ -243,13 +245,13 @@
     
     function hardReset() {
         if(confirm("모든 유저 데이터와 도감이 완전히 삭제됩니다. 정말 하시겠습니까?")) {
-            localStorage.removeItem('archieGachaDB_v8');
+            localStorage.removeItem('archieGachaDB_v9');
             localStorage.removeItem('archieGacha_Session');
             window.location.href = window.location.href.split('?')[0];
         }
     }
 
-    // 💡 내부 스캐너 기능 (시간 제한 없음)
+    // 내부 스캐너 기능 (시간 제한 없음)
     function startScanner() {
         document.getElementById('startScannerBtn').style.display = 'none';
         document.getElementById('reader').style.display = 'block';
@@ -258,7 +260,7 @@
         html5QrcodeScanner.render(onScanSuccess, () => {});
     }
 
-    // 💡 내부 스캐너로 스캔 성공 시
+    // 내부 스캐너로 스캔 성공 시
     function onScanSuccess(decodedText) {
         if (decodedText.includes("action=gacha") || decodedText === "KCG_GACHA_EVENT") {
             html5QrcodeScanner.clear();
@@ -268,7 +270,7 @@
         }
     }
 
-    // 💡 뽑기 통합 실행 함수 (내/외부 공통 - 시간 제한 없음)
+    // 뽑기 통합 실행 함수 (내/외부 공통 - 시간 제한 없음)
     function triggerGachaFlow() {
         const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
         document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
@@ -322,7 +324,7 @@
     function closeModal() {
         if(!usersDB[currentUser].collection.includes(currentlyDrawnChar.id)) {
             usersDB[currentUser].collection.push(currentlyDrawnChar.id);
-            localStorage.setItem('archieGachaDB_v8', JSON.stringify(usersDB));
+            localStorage.setItem('archieGachaDB_v9', JSON.stringify(usersDB));
         }
         
         document.getElementById("storyModal").style.display = "none";
