@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>해양경찰 심해의 기록자</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; text-align: center; padding-bottom: 50px; color: #333; }
+        h2 { color: #003366; margin-bottom: 5px; }
+        .desc { font-size: 14px; color: #555; margin-bottom: 20px; }
+        
+        .auth-container { max-width: 320px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .auth-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        
+        .password-container { position: relative; width: 100%; margin: 8px 0; }
+        .password-container .auth-input { margin: 0; padding-right: 40px; }
+        .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; color: #888; user-select: none; }
+        
+        .auth-btn { background: #003366; color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; transition: 0.2s; }
+        .auth-btn:hover { background: #002244; }
+        .auth-link { font-size: 12px; color: #0056b3; cursor: pointer; margin-top: 15px; display: inline-block; text-decoration: underline; }
+        .reset-btn { background: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; font-size: 12px; cursor: pointer; margin-top: 20px; }
+        
+        #appContainer { display: none; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; font-size: 14px; font-weight: bold;}
+        .logout-btn { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        
+        #startScannerBtn { background: #0056b3; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: 0.2s; }
+        #startScannerBtn:active { transform: scale(0.97); }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 20px; }
+        
+        /* 💡 도감 갤러리 레이아웃 완벽 동기화 */
+        .gallery-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 4px solid #0056b3; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 12px; padding: 5px; justify-items: center; }
+        
+        /* 💡 카드 디자인 (사진과 동일한 비율 및 여백) */
+        .character-card { position: relative; width: 105px; height: 155px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; padding: 10px; border: 1px solid #f0f0f0; box-sizing: border-box; }
+        
+        /* 💡 뱃지 디자인 */
+        .badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2; }
+        .badge.common { background-color: #9ca3af; color: white; }
+        .badge.rare { background-color: #3b82f6; color: white; }
+        .badge.epic { background-color: #a855f7; color: white; }
+        .badge.legendary { background-color: #eab308; color: white; }
+        .badge.mythic { background-color: #ef4444; color: white; }
+        
+        /* 💡 이미지 회색 박스 래퍼 (미획득 시 사진처럼 보임) */
+        .character-img-wrapper { width: 85px; height: 85px; background-color: #f3f4f6; border-radius: 8px; margin-top: 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .character-img { width: 100%; height: 100%; object-fit: cover; } /* 꽉 차게 비율 유지 */
+        
+        /* 💡 캐릭터 이름 텍스트 */
+        .char-name { font-size: 13px; font-weight: bold; color: #333; text-align: center; }
+        .char-name.locked { color: #aaa; }
+        
+        #storyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; }
+        .modal-content { position: relative; margin: 10% auto; background: white; color: #333; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; margin-bottom: 15px; border-radius: 8px; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .action-btn { background: #0056b3; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;}
+        .reward-img { width: 200px; height: 200px; object-fit: contain; margin: 0 auto 15px; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .demo-qr-section { margin-top: 40px; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="authWrap">
+        <h2>🌊 심해의 기록자 뽑기</h2>
+        <p class="desc">해양경찰과 함께 바다를 지키고 보상을 받으세요!</p>
+        
+        <div id="loginBox" class="auth-container">
+            <h3 style="margin-top:0;">로그인</h3>
+            <input type="text" id="loginId" class="auth-input" placeholder="아이디 (또는 휴대폰 번호)">
+            <div class="password-container">
+                <input type="password" id="loginPw" class="auth-input" placeholder="비밀번호">
+                <span class="toggle-pw" onclick="togglePassword('loginPw', this)">👁️</span>
+            </div>
+            <button class="auth-btn" onclick="login()">탐험 시작하기</button>
+            <div style="margin-top: 15px;">
+                <span style="font-size: 13px; color: #666;">계정이 없으신가요? </span>
+                <span class="auth-link" style="margin-top:0;" onclick="toggleAuth('signupBox')">회원가입</span>
+            </div>
+            <button class="reset-btn" onclick="hardReset()">전체 데이터 초기화</button>
+        </div>
+
+        <div id="signupBox" class="auth-container" style="display: none;">
+            <h3 style="margin-top:0;">회원가입</h3>
+            <input type="text" id="signupId" class="auth-input" placeholder="사용할 아이디 입력">
+            <div class="password-container">
+                <input type="password" id="signupPw" class="auth-input" placeholder="사용할 비밀번호 입력">
+                <span class="toggle-pw" onclick="togglePassword('signupPw', this)">👁️</span>
+            </div>
+            <button class="auth-btn" onclick="signup()">가입 완료</button>
+            <div style="margin-top: 15px;">
+                <span class="auth-link" style="margin-top:0;" onclick="toggleAuth('loginBox')">로그인 화면으로 돌아가기</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="appContainer">
+        <div class="header-bar">
+            <span id="welcomeMsg"></span>
+            <button class="logout-btn" onclick="logout()">로그아웃</button>
+        </div>
+        
+        <button id="startScannerBtn" onclick="startScanner()">📷 앱 내부 스캐너로 뽑기</button>
+        <div id="reader"></div>
+        
+        <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/<span id="totalCount">9</span>)</div>
+        <div class="gallery" id="galleryContainer"></div>
+        
+        <div class="demo-qr-section" id="demoQrArea">
+            <h3 style="color:#0056b3; margin-bottom:5px;">📱 공통 미션 통합 QR</h3>
+            <p style="font-size:12px; color:#777; margin-bottom:15px;">
+                1) <b>스마트폰 기본 카메라</b>로 찍으면 바로 접속 및 뽑기!<br>
+                2) <b>앱 내부 스캐너</b>로 찍어도 정상 작동합니다.
+            </p>
+            <img id="demoQrImg" src="" alt="통합 QR" style="width:150px; height:150px;">
+        </div>
+    </div>
+
+    <div id="storyModal">
+        <div class="modal-content">
+            <div id="step1">
+                <div style="font-size:22px; font-weight:bold; margin-bottom:15px; color:#0056b3;">🌊 긴급 해양 출동!</div>
+                <div class="video-wrapper">
+                    <iframe id="modalVideo" src="" allow="autoplay"></iframe>
+                </div>
+                <div style="margin-bottom:20px; font-size:14px; text-align:left; background:#f4f6f9; padding:15px; border-radius:8px;">
+                    해양경찰의 거친 현장이 담긴 기록을 확인했습니다!<br>
+                    기록을 바탕으로 새로운 아치 캐릭터가 호출됩니다. 과연 어떤 아치가 등장할까요?
+                </div>
+                <button class="action-btn" onclick="executeGacha()">아치 소환하기! (뽑기)</button>
+            </div>
+            
+            <div id="step2" style="display: none;">
+                <div id="gachaRarityText" style="font-size:16px; font-weight:bold; margin-bottom:5px;"></div>
+                <h2 id="gachaCharName" style="margin-top:0; color:#333;">캐릭터 이름</h2>
+                <img id="rewardImg" class="reward-img" src="">
+                <p id="dupMessage" style="color:#d9534f; font-weight:bold; font-size:14px; display:none;">이미 보유한 캐릭터입니다! (아쉽네요)</p>
+                <p id="newMessage" style="color:#28a745; font-weight:bold; font-size:14px; display:none;">새로운 캐릭터를 획득했습니다!</p>
+                <button class="action-btn" style="margin-top:15px;" onclick="closeModal()">도감 확인하기</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const youtubeVideos = ["7CwtSgJvFdM", "jRX3fezEFIE", "gE7VunbFeHw", "p0N1MhwUgmo", "OEUUeHKepco", "9XLddsY_KQI"];
+
+    const characterDB = [
+        { id: "l1", name: "세종대왕", img: "세종대왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "l2", name: "광개토대왕", img: "광개토대왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "l3", name: "진흥왕", img: "진흥왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "l4", name: "근초고왕", img: "근초고왕 아치.png", rarity: "레전더리", class: "legendary", prob: 0.5 },
+        { id: "e1", name: "기사", img: "기사 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "e2", name: "마법사", img: "마법사 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "e3", name: "힐러", img: "힐러 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "e4", name: "도적", img: "도적 아치.png", rarity: "에픽", class: "epic", prob: 2.5 },
+        { id: "r1", name: "봄", img: "봄 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r2", name: "여름", img: "여름 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r3", name: "가을", img: "가을 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r4", name: "겨울", img: "겨울 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r5", name: "중부", img: "중부 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r6", name: "서해", img: "서해 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r7", name: "남해", img: "남해 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r8", name: "동해", img: "동해 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "r9", name: "제주", img: "제주 아치.png", rarity: "레어", class: "rare", prob: 4 },
+        { id: "c2", name: "과학자", img: "과학자 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c3", name: "농부", img: "농부 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c4", name: "산타", img: "산타 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c5", name: "신랑", img: "신랑 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c6", name: "신부", img: "신부 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c7", name: "의사", img: "의사 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c8", name: "잠수부", img: "잠수부 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c9", name: "학생", img: "학생 아치.png", rarity: "커먼", class: "common", prob: 4.88 },
+        { id: "c10", name: "화가", img: "화가 아치.png", rarity: "커먼", class: "common", prob: 4.88 }
+    ];
+
+    let usersDB = JSON.parse(localStorage.getItem('archieGachaDB_v10')) || {};
+    let currentUser = null;
+    let html5QrcodeScanner = null;
+    let currentlyDrawnChar = null;
+
+    document.getElementById("totalCount").innerText = characterDB.length;
+
+    window.onload = function() {
+        const currentUrlBase = window.location.href.split('?')[0];
+        const gachaUrl = currentUrlBase + "?action=gacha";
+        document.getElementById('demoQrImg').src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(gachaUrl);
+
+        const savedSession = localStorage.getItem('archieGacha_Session');
+        if (savedSession && usersDB[savedSession]) {
+            currentUser = savedSession;
+            proceedToApp(); 
+        }
+    };
+
+    function togglePassword(inputId, iconElement) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            iconElement.style.opacity = "0.5"; 
+        } else {
+            input.type = "password";
+            iconElement.style.opacity = "1";
+        }
+    }
+
+    function toggleAuth(boxId) {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('signupBox').style.display = 'none';
+        document.getElementById(boxId).style.display = 'block';
+    }
+
+    function signup() {
+        const id = document.getElementById('signupId').value.trim();
+        const pw = document.getElementById('signupPw').value.trim();
+
+        if(id.length < 2) return alert("아이디를 2글자 이상 입력해주세요.");
+        if(pw.length < 4) return alert("비밀번호는 4자리 이상 입력해주세요.");
+        if(usersDB[id]) return alert("이미 가입된 아이디입니다.");
+
+        usersDB[id] = { password: pw, collection: [] };
+        localStorage.setItem('archieGachaDB_v10', JSON.stringify(usersDB));
+        
+        alert("회원가입이 완료되었습니다! 로그인해주세요.");
+        document.getElementById('signupId').value = "";
+        document.getElementById('signupPw').value = "";
+        toggleAuth('loginBox');
+    }
+
+    function login() {
+        const id = document.getElementById('loginId').value.trim();
+        const pw = document.getElementById('loginPw').value.trim();
+        
+        if(usersDB[id] && usersDB[id].password === pw) {
+            currentUser = id;
+            localStorage.setItem('archieGacha_Session', currentUser); 
+            proceedToApp();
+        } else {
+            alert("아이디 또는 비밀번호가 틀렸습니다.");
+        }
+    }
+
+    function proceedToApp() {
+        document.getElementById('authWrap').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        document.getElementById('demoQrArea').style.display = 'block';
+        document.getElementById('welcomeMsg').innerText = `${currentUser} 수호자님`;
+        
+        renderGallery();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'gacha') {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            triggerGachaFlow();
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('archieGacha_Session');
+        window.location.href = window.location.href.split('?')[0]; 
+    }
+    
+    function hardReset() {
+        if(confirm("모든 유저 데이터와 도감이 완전히 삭제됩니다. 정말 하시겠습니까?")) {
+            localStorage.removeItem('archieGachaDB_v10');
+            localStorage.removeItem('archieGacha_Session');
+            window.location.href = window.location.href.split('?')[0];
+        }
+    }
+
+    function startScanner() {
+        document.getElementById('startScannerBtn').style.display = 'none';
+        document.getElementById('reader').style.display = 'block';
+        
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+        html5QrcodeScanner.render(onScanSuccess, () => {});
+    }
+
+    function onScanSuccess(decodedText) {
+        if (decodedText.includes("action=gacha") || decodedText === "KCG_GACHA_EVENT") {
+            html5QrcodeScanner.clear();
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('startScannerBtn').style.display = 'block';
+            triggerGachaFlow();
+        }
+    }
+
+    function triggerGachaFlow() {
+        const randomVideoId = youtubeVideos[Math.floor(Math.random() * youtubeVideos.length)];
+        document.getElementById("modalVideo").src = "https://www.youtube.com/embed/" + randomVideoId + "?autoplay=1";
+        
+        document.getElementById("step1").style.display = "block";
+        document.getElementById("step2").style.display = "none";
+        document.getElementById("storyModal").style.display = "block";
+    }
+
+    function executeGacha() {
+        document.getElementById("modalVideo").src = "";
+        
+        const rand = Math.random() * 100;
+        let acc = 0;
+        currentlyDrawnChar = characterDB[characterDB.length - 1]; 
+        
+        for (let char of characterDB) {
+            acc += char.prob;
+            if (rand <= acc) {
+                currentlyDrawnChar = char;
+                break;
+            }
+        }
+
+        const colorMap = {
+            'common': '#9ca3af',
+            'rare': '#3b82f6',
+            'epic': '#a855f7',
+            'legendary': '#eab308',
+            'mythic': '#ef4444'
+        };
+        const rarityColor = colorMap[currentlyDrawnChar.class] || '#333'; 
+
+        document.getElementById("gachaRarityText").innerText = `[${currentlyDrawnChar.rarity}] 등급 등장!`;
+        document.getElementById("gachaRarityText").style.color = rarityColor;
+        document.getElementById("gachaCharName").innerText = currentlyDrawnChar.name;
+        document.getElementById("rewardImg").src = currentlyDrawnChar.img;
+
+        if(usersDB[currentUser].collection.includes(currentlyDrawnChar.id)) {
+            document.getElementById("dupMessage").style.display = "block";
+            document.getElementById("newMessage").style.display = "none";
+        } else {
+            document.getElementById("dupMessage").style.display = "none";
+            document.getElementById("newMessage").style.display = "block";
+        }
+
+        document.getElementById("step1").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+    }
+
+    function closeModal() {
+        if(!usersDB[currentUser].collection.includes(currentlyDrawnChar.id)) {
+            usersDB[currentUser].collection.push(currentlyDrawnChar.id);
+            localStorage.setItem('archieGachaDB_v10', JSON.stringify(usersDB));
+        }
+        
+        document.getElementById("storyModal").style.display = "none";
+        renderGallery();
+    }
+
+    // 💡 도감 렌더링 수정 (사진처럼 미획득 시 빈 상자로)
+    function renderGallery() {
+        const userCol = usersDB[currentUser].collection;
+        const container = document.getElementById("galleryContainer");
+        container.innerHTML = "";
+        
+        let count = 0;
+        characterDB.forEach(char => {
+            const hasChar = userCol.includes(char.id);
+            if(hasChar) count++;
+            
+            // hasChar(획득 여부)에 따라 img 태그를 그리거나 빈 공간으로 둠
+            container.innerHTML += `
+                <div class="character-card">
+                    <div class="badge ${char.class}">${char.rarity}</div>
+                    <div class="character-img-wrapper">
+                        ${hasChar ? `<img src="${char.img}" class="character-img">` : ''}
+                    </div>
+                    <div class="char-name ${hasChar ? '' : 'locked'}">${hasChar ? char.name : '???'}</div>
+                </div>
+            `;
+        });
+        
+        document.getElementById("collectionCount").innerText = count;
+    }
+</script>
+</body>
+</html>
