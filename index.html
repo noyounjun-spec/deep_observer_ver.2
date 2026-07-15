@@ -64,14 +64,20 @@
 
         /* 미니게임 UI */
         #gameSection { display: none; margin-top: 20px; max-width: 600px; margin: 20px auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        canvas { display: block; margin: 0 auto; background-color: #87CEEB; border-radius: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); width: 100%; max-width: 400px; height: 200px; cursor: pointer; }
+        canvas { display: block; margin: 0 auto; background-color: #87CEEB; border-radius: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); width: 100%; max-width: 400px; height: 200px; }
         .game-controls { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
         .game-score { font-size: 20px; font-weight: bold; color: #003366; margin-bottom: 10px; }
         select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; width: 100%; }
+        
+        /* 게임 키 패드 (컨트롤러) */
+        .keypad { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; }
+        .key-btn { flex: 1; background: #e0e6ed; color: #003366; border: 2px solid #b3c2d1; padding: 20px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b3c2d1; user-select: none; -webkit-user-select: none; touch-action: none; transition: 0.1s; }
+        .key-btn:active { transform: translateY(4px); box-shadow: none; background: #d0d9e2; }
     </style>
 </head>
 <body>
 
+    <!-- 로그인 및 회원가입 영역 -->
     <div id="authWrap">
         <h2>🌊 심해의 기록자 뽑기</h2>
         <p class="desc">해양경찰과 함께 바다를 지키고 아치를 모집하세요!</p>
@@ -105,6 +111,7 @@
         </div>
     </div>
 
+    <!-- 메인 콘텐츠 영역 -->
     <div id="appContainer">
         <div class="header-bar">
             <span id="welcomeMsg"></span>
@@ -118,17 +125,25 @@
 
         <div id="reader"></div>
         
+        <!-- 갤러리 섹션 -->
         <div id="gallerySection">
             <div class="gallery-title">내 아치 도감 (<span id="collectionCount">0</span>/<span id="totalCount">26</span>)</div>
             <div class="gallery" id="galleryContainer"></div>
         </div>
 
+        <!-- 미니게임 섹션 -->
         <div id="gameSection">
             <h3 style="margin-top: 0; color: #0056b3;">🌊 해변 정화 작전</h3>
-            <p style="font-size: 12px; color: #666;">화면을 터치하거나 스페이스바를 눌러 해양 쓰레기를 뛰어넘으세요!</p>
+            <p style="font-size: 12px; color: #666;">키 패드를 눌러 장애물과 날아오는 쓰레기를 피하세요!</p>
             <div class="game-score">점수: <span id="gameScore">0</span></div>
             
             <canvas id="gameCanvas" width="400" height="200"></canvas>
+            
+            <!-- 게임 키 패드 -->
+            <div class="keypad" id="gameKeypad" style="display: none;">
+                <button class="key-btn" id="btnSlide">⬇️ 슬라이드</button>
+                <button class="key-btn" id="btnJump">⬆️ 점프</button>
+            </div>
             
             <div class="game-controls">
                 <select id="charSelect"></select>
@@ -137,6 +152,7 @@
             </div>
         </div>
         
+        <!-- 데모 테스트 통합 QR 영역 -->
         <div class="demo-qr-section" id="demoQrArea">
             <h3 style="color:#0056b3; margin-bottom:5px;">📱 공통 미션 통합 QR</h3>
             <p style="font-size:12px; color:#777; margin-bottom:15px;">
@@ -146,6 +162,7 @@
         </div>
     </div>
 
+    <!-- 비디오 시청 및 가챠 모달 영역 -->
     <div id="storyModal">
         <div class="modal-content">
             <div id="step1">
@@ -406,18 +423,22 @@
     let isGameOver = false;
     let score = 0;
     let frames = 0;
-    let gameSpeed = 4;
+    let gameSpeed = 4.5;
     
-    // 플레이어 객체
+    // 플레이어 객체 (슬라이딩 수치 포함)
     let player = {
-        x: 30, y: 120, width: 40, height: 40, 
-        dy: 0, gravity: 0.6, jumpPower: -10, isGrounded: false,
+        x: 30, y: 120, 
+        normalWidth: 40, normalHeight: 45, 
+        width: 40, height: 45, 
+        dy: 0, gravity: 0.6, jumpPower: -10, 
+        isGrounded: false, isSliding: false,
         img: new Image()
     };
     
     // 장애물(해양 쓰레기) 배열
     let obstacles = [];
-    const trashTypes = ['🥤', '🛍️', '🛢️', '🥫']; // 플라스틱컵, 비닐봉지, 기름통, 캔
+    const groundTrash = ['🥤', '🛢️']; // 바닥 쓰레기
+    const flyingTrash = ['🦅', '🎈']; // 공중 장애물(갈매기, 풍선 등 - 슬라이딩으로 회피)
 
     function openGameRoom() {
         const userCol = usersDB[currentUser].collection;
@@ -426,7 +447,6 @@
             return;
         }
 
-        // 캐릭터 선택 셀렉트 박스 채우기
         const selectBox = document.getElementById('charSelect');
         selectBox.innerHTML = '';
         userCol.forEach(id => {
@@ -442,7 +462,8 @@
         document.getElementById('gallerySection').style.display = 'none';
         document.getElementById('demoQrArea').style.display = 'none';
         document.getElementById('gameSection').style.display = 'block';
-        drawInitialBackground(); // 게임 시작 전 배경 그리기
+        document.getElementById('gameKeypad').style.display = 'none'; // 시작 전엔 숨김
+        drawInitialBackground(); 
     }
 
     function closeGameRoom() {
@@ -453,96 +474,142 @@
     }
 
     function startGame() {
-        cancelAnimationFrame(gameLoopId); // 기존 루프 초기화
+        cancelAnimationFrame(gameLoopId); 
         
-        // 선택한 캐릭터 이미지 로드
         let selectedCharId = document.getElementById('charSelect').value;
         let charInfo = characterDB.find(c => c.id === selectedCharId);
         player.img.src = charInfo.img;
 
-        // 게임 변수 초기화
+        player.width = player.normalWidth;
+        player.height = player.normalHeight;
         player.y = 120;
         player.dy = 0;
+        player.isSliding = false;
+        
         obstacles = [];
         score = 0;
         frames = 0;
-        gameSpeed = 4;
+        gameSpeed = 4.5;
         isGameOver = false;
         
         document.getElementById('startBtn').innerText = "다시 시작하기";
         document.getElementById('gameScore').innerText = score;
+        document.getElementById('gameKeypad').style.display = 'flex'; // 키 패드 표시
 
         updateGame();
     }
 
-    // 조작 이벤트 (스페이스바 또는 화면 터치)
-    window.addEventListener('keydown', (e) => {
-        if ((e.code === 'Space' || e.code === 'ArrowUp') && !isGameOver) {
-            e.preventDefault();
-            jump();
-        }
-    });
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(!isGameOver) jump(); }, {passive: false});
-    canvas.addEventListener('mousedown', () => { if(!isGameOver) jump(); });
-
+    // ================= [ 조작 이벤트 ] =================
+    
     function jump() {
-        if (player.isGrounded) {
+        // 슬라이딩 중이 아닐 때만 점프 가능
+        if (player.isGrounded && !player.isSliding) {
             player.dy = player.jumpPower;
             player.isGrounded = false;
         }
     }
+
+    function startSlide() {
+        if (player.isGrounded && !player.isSliding) {
+            player.isSliding = true;
+            player.height = player.normalHeight / 1.8; // 높이를 낮춰서 슬라이딩 모션 (찌그러짐)
+            player.width = player.normalWidth * 1.3;  // 옆으로 퍼짐
+            player.y = (canvas.height - 40) - player.height; // 바닥 높이 재조정
+        } else if (!player.isGrounded) {
+            // 공중에 있을 때 아래 방향키/버튼을 누르면 빨리 떨어짐 (급강하)
+            player.dy += 3;
+        }
+    }
+
+    function stopSlide() {
+        player.isSliding = false;
+        player.height = player.normalHeight;
+        player.width = player.normalWidth;
+        if (player.isGrounded) {
+            player.y = (canvas.height - 40) - player.height;
+        }
+    }
+
+    // 키보드 조작
+    window.addEventListener('keydown', (e) => {
+        if (isGameOver) return;
+        if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); }
+        if (e.code === 'ArrowDown') { e.preventDefault(); startSlide(); }
+    });
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'ArrowDown') stopSlide();
+    });
+
+    // 화면 터치/마우스 조작 (키 패드)
+    const btnJump = document.getElementById('btnJump');
+    const btnSlide = document.getElementById('btnSlide');
+
+    const handleJump = (e) => { e.preventDefault(); if(!isGameOver) jump(); };
+    btnJump.addEventListener('mousedown', handleJump);
+    btnJump.addEventListener('touchstart', handleJump, {passive: false});
+
+    const handleSlideStart = (e) => { e.preventDefault(); if(!isGameOver) startSlide(); };
+    const handleSlideEnd = (e) => { e.preventDefault(); stopSlide(); };
+    
+    btnSlide.addEventListener('mousedown', handleSlideStart);
+    btnSlide.addEventListener('touchstart', handleSlideStart, {passive: false});
+    btnSlide.addEventListener('mouseup', handleSlideEnd);
+    btnSlide.addEventListener('mouseleave', handleSlideEnd);
+    btnSlide.addEventListener('touchend', handleSlideEnd);
+
+    // ================= [ 게임 루프 ] =================
 
     function updateGame() {
         if (isGameOver) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         frames++;
 
-        // 1. 배경 그리기 (해변, 바다, 모래사장)
         drawInitialBackground();
 
-        // 2. 플레이어 물리엔진 (점프/중력)
+        // 2. 플레이어 물리엔진
         player.dy += player.gravity;
         player.y += player.dy;
         
-        // 바닥 충돌 처리 (모래사장 높이에 맞춤)
         if (player.y + player.height >= canvas.height - 40) {
             player.y = canvas.height - 40 - player.height;
             player.dy = 0;
             player.isGrounded = true;
         }
 
-        // 플레이어 렌더링 (이미지가 없거나 로드 안됐을 땐 대체용 사각형 표시)
+        // 플레이어 렌더링 (누끼 이미지가 자연스럽게 그려짐, 슬라이드 시 형태 변화)
         if(player.img.complete && player.img.src) {
             ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
         } else {
-            ctx.fillStyle = '#333';
+            ctx.fillStyle = player.isSliding ? 'orange' : '#333';
             ctx.fillRect(player.x, player.y, player.width, player.height);
         }
 
-        // 3. 장애물(쓰레기) 생성 및 이동
-        // 난이도 상승 (점수가 높아지면 속도 증가, 빈도 증가)
-        let spawnRate = Math.max(60, 100 - Math.floor(score / 50)); 
+        // 3. 장애물 생성
+        let spawnRate = Math.max(50, 90 - Math.floor(score / 50)); 
         
         if (frames % spawnRate === 0) {
-            let trashEmoji = trashTypes[Math.floor(Math.random() * trashTypes.length)];
+            // 바닥 장애물(점프) or 공중 장애물(슬라이드) 랜덤 생성
+            let isFlying = Math.random() > 0.6; // 40% 확률로 공중 장애물
+            let emojiList = isFlying ? flyingTrash : groundTrash;
+            let emoji = emojiList[Math.floor(Math.random() * emojiList.length)];
+            
             obstacles.push({
                 x: canvas.width, 
-                y: canvas.height - 70, 
+                y: isFlying ? canvas.height - 95 : canvas.height - 70, // 공중 장애물은 높게
                 width: 30, 
                 height: 30,
-                emoji: trashEmoji
+                emoji: emoji
             });
         }
 
+        // 장애물 이동 및 충돌
         for (let i = 0; i < obstacles.length; i++) {
             let obs = obstacles[i];
             obs.x -= gameSpeed;
 
-            // 쓰레기 이모지 렌더링
             ctx.font = "30px Arial";
             ctx.fillText(obs.emoji, obs.x, obs.y + obs.height);
 
-            // 충돌 체크 (AABB) -> 캐릭터 박스를 조금 작게 잡아주면 판정이 덜 억울함
             let hitBoxShrink = 8;
             if (
                 player.x + hitBoxShrink < obs.x + obs.width &&
@@ -555,33 +622,26 @@
             }
         }
 
-        // 화면 밖으로 나간 장애물 제거 및 점수 획득
         if (obstacles.length > 0 && obstacles[0].x < -obstacles[0].width) {
             obstacles.shift();
             score += 10;
             document.getElementById('gameScore').innerText = score;
-            
-            // 점수에 따른 속도 증가
-            if (score % 50 === 0) gameSpeed += 0.5;
+            if (score % 50 === 0) gameSpeed += 0.5; // 속도 증가
         }
 
         gameLoopId = requestAnimationFrame(updateGame);
     }
 
     function drawInitialBackground() {
-        // 하늘
         ctx.fillStyle = '#87CEEB';
         ctx.fillRect(0, 0, canvas.width, canvas.height * 0.4);
         
-        // 바다
         ctx.fillStyle = '#4682B4';
         ctx.fillRect(0, canvas.height * 0.4, canvas.width, canvas.height * 0.4);
         
-        // 하얀 파도선
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, canvas.height * 0.78, canvas.width, 4);
 
-        // 모래사장
         ctx.fillStyle = '#F4A460';
         ctx.fillRect(0, canvas.height * 0.8, canvas.width, canvas.height * 0.2);
     }
@@ -597,7 +657,9 @@
         ctx.fillText("게임 오버!", canvas.width/2, canvas.height/2 - 10);
         ctx.font = "16px 'Malgun Gothic'";
         ctx.fillText(`최종 점수: ${score}점`, canvas.width/2, canvas.height/2 + 20);
-        ctx.textAlign = "left"; // 초기화
+        ctx.textAlign = "left"; 
+        
+        stopSlide(); // 슬라이드 상태 강제 해제
     }
 </script>
 </body>
